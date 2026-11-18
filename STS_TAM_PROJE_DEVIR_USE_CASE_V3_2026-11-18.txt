@@ -1,0 +1,2097 @@
+STAJ TAKİP SİSTEMİ (STS) — YENİ BİR YAPAY ZEKÂ İÇİN KAPSAMLI PROJE DEVİR VE USE CASE v3.0 BAĞLAM DOSYASI
+Sürüm: 2026-11-18 / AI HANDOFF v3.0
+Biçim: UTF-8 TXT
+Proje: 2026–2027, 12/A Bilişim Teknolojileri, LAB1, SBİST MTAL
+
+================== ÖNEMLİ OKUMA TALİMATI ==================
+Bu belge, projeyi ilk kez gören bir yapay zekânın amaçları, tarihçeyi, gerçek yazılım mimarisini, yeni Use Case v3.0 gereksinimlerini, öğretmen eleştirilerini ve güvenli çalışma kurallarını anlaması için hazırlanmıştır. Tek başına tüm güncel kodu ve veritabanını temsil etmez. Özellikle mevcut dosyaların ve son testlerin okunması gerekir.
+
+BELGENİN BÖLÜMLERİ VE ÖNCELİĞİ
+A — 2026-11-18 Yeni Use Case v3.0 öncelikli devir notu ve kontrol matrisi (bu belgenin başı)
+B — 2026-11-17 doğrulanmış ana proje bağlamı ve karar defteri (tarihli durum bilgisi)
+C — Use Case v3.0'a dayalı ayrıntılı AGY geliştirme talimatı (gereksinimler)
+D — Daha eski 2026–2027 ayrıntılı proje belgesi (ARŞİV; güncel kodun veya yeni Use Case'in üstünde değildir)
+
+KAYNAK ÖNCELİĞİ
+1. Kullanıcının o anki açık isteği ve son tarihli kesin öğretmen kararı.
+2. Gerçek çalışan kaynak kodu, migration ve güncel test çıktısı.
+3. Yeni Use Case v3.0 ve 9 Kasım öğretmen notları: HEDEF GEREKSİNİMLER; otomatik olarak uygulanmış kod sayılmaz.
+4. 17 Kasım proje bağlamı: tarihli mimari ve çalışma bilgisi.
+5. Daha eski proje belgeleri: fikir ve tarihçe; çelişkiler varsa arşiv kabul edilir.
+
+KANIT ETİKETLERİ: [HOCA] öğretmen ifadesi, [KOD] incelenmiş kaynak kod, [TEST] tarihli test, [EKİP] ekip kararı, [HEDEF-UC3] yeni Use Case hedefi, [AÇIK] öğretmen onayı bekliyor, [ÖNERİ] mühendislik önerisi, [ARŞİV] eski tarihli bilgi.
+
+UYARI: Aşağıda verilen dizinler, testler, sunucu bilgileri ve bağlantılar tarihli bağlamdır; güncel erişim, test başarısı, deploy durumu veya öğretmen kabulü olarak ileri sürülmemelidir. Şifre, token, gerçek öğrenci verisi veya .env içeriği bu belgeye dahil edilmemiştir.
+
+================== A. USE CASE v3.0 ÖNCELİKLİ DEVİR ÖZETİ ==================
+
+A1. ÜRÜNÜN TANIMI
+Meslek lisesi stajlarının yönetimi için sunucu tarafı PHP web uygulaması. Okul yöneticisi, koordinatör öğretmen, işletme yetkilisi, öğrenci ve veli rollerinin ayrı yetkileri vardır. Staj atamaları akademik dönem ve işletmeyle ilişkilendirilir. İşletme günlük yoklama, öğrenci haftalık faaliyet raporu, koordinatör rapor onayı ve işletme ziyareti, taraflar ayrı değerlendirmeler, yönetim filtreli rapor ve CSV dışa aktarımı yapar. Veli yalnızca bağlı çocuklarının sınırlı özetini görür. Risk göstergeleri insan incelemesine yardımcı olur.
+
+A2. TEKNİK GİRİŞ NOKTALARI
+Tarihli ana proje yolu: /home/Curocx/stajtakipsistemi/FirstVersion
+Ana Use Case kaynağı: docs/delivery/STS_USE_CASE_KAPSAMLI_DOKUMANI.md (v3.0; yaklaşık 105 KB; ayrıntılı UC-01..UC-25 senaryo kartları)
+Diyagram: docs/delivery/STS_USE_CASE_A4_YATAY_V3.svg
+Düzenlenebilir UML: docs/delivery/STS_USE_CASE_DIYAGRAMI.puml
+Mermaid: docs/delivery/STS_USE_CASE_DIYAGRAMI.mmd
+Tahta fotoğrafları: evidence/teacher_board_refs/STS_Tahta_Referans_01_Genel.jpg .. STS_Tahta_Referans_06_Dorduncu_Ekran.jpg
+Tahta manifestosu: evidence/teacher_board_refs/REFERANSLAR_AGY.md
+Öğretmen notları: evidence/teacher_board_refs/OGRETMEN_NOTLARI_20261109_ORIJINAL.txt
+Şema inceleme başlangıcı: migrations/001_initial.sql
+Bu dosyalar AI'nin eriştiği depoda bulunmuyorsa, dosyalar olmadan içeriklerini okuduğunu iddia etme; kullanıcıdan veya erişilebilir kaynaktan iste.
+
+A3. YENİ USE CASE v3.0 — TAM İŞLEV HARİTASI
+Paket 1 / Kimlik, oturum, bildirim:
+UC-01 Giriş ve güvenli oturum; UC-02 Güvenli çıkış; UC-03 Uygulama içi bildirimleri görme/okundu işaretleme.
+Paket 2 / Okul yapısı:
+UC-04 Okul ve mesleki alan yönetimi; UC-05 Program türü ATP/AMP ve sınıf yönetimi; UC-06 Akademik dönem oluşturma/arşivleme.
+Paket 3 / Kullanıcı ve eşleştirme:
+UC-07 Parola sıfırlama; UC-07A güvenli ilk parola üretme; UC-08 öğrenci hesabı/profili; UC-08B öğrenci kaydında zorunlu veli seçeneği [AÇIK]; UC-09 veli hesabı ve çocuk bağlantıları; UC-09A telefonla mevcut veli bulma; UC-10 koordinatör öğretmen hesabı/alanı; UC-11 işletme ve yetkili hesabı; UC-12 aktif/pasif/arşiv hesap durumu ve kilit kaldırma.
+Paket 4 / Staj ataması ve geçmiş:
+UC-13 öğrenci+işletme+öğretmen+dönem ataması; UC-14 okuldan sınıfa tümden gelim gezinme ve öğrenci History; UC-15 velinin bağlı çocuklarının staj yeri ve devam sayısı özetini salt okuma.
+Paket 5 / Staj operasyonu:
+UC-16 günlük devam kaydı/düzeltme/arşiv; UC-17 haftalık rapor taslağı/düzenleme/gönderme; UC-18 öğretmen onay/düzeltme isteği; UC-19 işletme ziyareti ve gözlem; UC-20 işletmenin öğrenciyi 0–100 değerlendirmesi; UC-21 öğrencinin işletmeyi 0–100 değerlendirmesi; UC-22 öğretmen/yöneticinin okul değerlendirmesi 0–100.
+Paket 6 / Analiz, rapor, denetim:
+UC-23 devamsızlık/düşük puan insan inceleme göstergesi; UC-24 filtreli staj raporu; UC-24A formül korumalı CSV dışa aktarımı; UC-25 değiştirilemez/append-only denetim günlüğü incelemesi.
+Ortak sistem işlevleri: SYS-01 kayıt sahipliği ve rol denetimi; SYS-02 denetim izi; SYS-03 uygulama içi bildirim.
+
+A4. AKTÖR VE GÜVENLİK SINIRLARI
+YÖNETİCİ: Okul/alan/program/sınıf/dönem, hesaplar, öğrenci-veli bağlantıları, işletme, atama, parola, rapor, audit yönetimi.
+KOORDİNATÖR ÖĞRETMEN: Kendisine atanmış öğrenciler; rapor onay/düzeltme; ziyaret; okul değerlendirmesi; yetkili raporlar.
+İŞLETME YETKİLİSİ: Yalnız ilişkili işletmenin öğrencilerinde yoklama ve işletme değerlendirmesi.
+ÖĞRENCİ: Kendi stajı, haftalık raporu ve işletme değerlendirmesi. KENDİ YOKLAMASINI GİREMEZ.
+VELİ: Yalnız kendisine bağlı çocuklarının staj işletmesi/devam özeti ve bildirimleri. YAZMA/PUANLAMA YETKİSİ YOK.
+Her sınır hem UI hem sunucu API/route seviyesinde 403 ve kayıt sahipliği testleriyle korunmalıdır. Bir rolün ekranda buton görmemesi tek başına yetki koruması değildir.
+
+A5. 9 KASIM ÖĞRETMENİN BEŞ EKRANLI TÜMDEN GELİM TASARIMI
+Ekran 1: Okul özeti (SBİST MTAL) ve alan/sınıf/öğrenci sayaçları.
+Ekran 2: Okulun mesleki alanları (dokuz alan ifadesi; isimler doğrulanmalı).
+Ekran 3: Seçilen alanda sınıflar (ATP/AMP), öğretmenler, işletmeler, veliler.
+Ekran 4: Seçilen sınıfın öğrenci tablosu: numara, ad, işletme, koordinatör, veli, yetkiye göre telefon, detay/düzenle/arşiv. Toplam/işletmede/atamasız sayaçları.
+Ekran 5: Öğrenci detay kartı, aktif staj, yoklama, haftalık rapor, ziyaret, değerlendirme ve kronolojik History.
+Navigasyon: OKUL > ALAN > PROGRAM/SINIF > ÖĞRENCİ > HISTORY.
+Tek uzun /admin sayfası yerine bu açık ve kademeli gezinme; form karmaşıklığını azaltma.
+
+A6. VERİ MODELİNDE ÖNEMLİ GERÇEK/HEDEF AYRIMLARI
+[KOD-ESKİ ŞEMA] students.class_name ve students.department serbest metin; [HEDEF-UC3] schools/departments/school_classes katalogları ve students.class_id yabancı anahtarı.
+[KOD-ESKİ ŞEMA] guardian_students(guardian_id,student_id) N:M bağlantısı mevcut; korunmalı.
+[KOD-ESKİ ŞEMA] guardians.phone metin ve UNIQUE garantisi yok; [HEDEF-UC3] 5XXXXXXXXX normalize/tekil telefon, mevcut veliyi telefonla bulma, yeni çocuk eklerken mükerrer hesap açmama.
+[KOD-ESKİ ŞEMA] users.email NOT NULL UNIQUE; [HEDEF-UC3] veli e-postası isteğe bağlı. Değişiklik migration ve kimlik doğrulama etkileriyle birlikte tasarlanmalı.
+[KOD-ESKİ ŞEMA] staj atamasında UNIQUE(student_id,term_id) tek dönem-tek atama; [AÇIK] aynı dönemde işletme değişikliği ve eski kayıtların History'ye korunması öğretmen kararı bekler.
+[ÖNERİ] Migration öncesi telefon mükerrerliği, alan/sınıf yazım varyasyonları, veri sahipliği ve geçmiş kayıtları analiz edilip yedek alınmalı. Gerçek veriler sessizce birleştirilmemeli/silinmemeli.
+
+A7. İŞ AKIŞLARI VE DURUM GEÇİŞLERİ
+Hesap açma: Admin > rol formu > veri doğrulama > güvenli parola > hesap > ilgili profil > denetim.
+Veli ekleme: telefon normalize et > mevcut veli varsa getir > yeni öğrenci bağlantısı ekle; yoksa yeni hesap + en az bir öğrenci bağlantısı. Öğrenci kayıt anında veli zorunluluğu [AÇIK].
+Staj: dönem+öğrenci+işletme+öğretmen > çakışma kontrolü > aktif atama > bildirim/audit.
+Yoklama: işletme yetkilisi > yetkili atama > tarih/durum > mükerrer önleme > düzeltmede audit.
+Haftalık rapor: taslak > gönderildi > öğretmen onayı veya düzeltme isteği > öğrenci düzeltme > yeniden gönderim. İşletme ön onayı [AÇIK].
+Değerlendirme: işletme öğrenciyi, öğrenci işletmeyi, öğretmen okulu değerlendirir; puanlar ayrı, 0–100. Resmî ağırlık [AÇIK].
+Veli: bağlı çocuk listesi > seçilen çocuk > salt okunur staj yeri/devam özeti.
+Rapor: dönem/alan/program/sınıf/öğrenci/işletme/öğretmen filtreleri > yetkiyle sınırlı sonuç > CSV formül koruması.
+
+A8. SEKİZ AÇIK ÖĞRETMEN KARARI (OK-01..OK-08)
+OK-01: Öğrenci velisiz açılıp sonra eşleştirilebilir mi, yoksa kayıt anında veli zorunlu mu? Öğretmen notları çelişkili.
+OK-02: İlk parola uzunluğu ve ilk girişte değiştirme zorunluluğu; öğretmen kısa parola istemiş, mevcut kod minimum 12 karakter kullanıyor. Güvenliği sessizce düşürme.
+OK-03: E-postası olmayan veli telefonla mı yoksa otomatik kullanıcı adıyla mı giriş yapacak?
+OK-04: Okulun dokuz mesleki alanının resmî adları ve ATP/AMP dışında MESEM/dal gibi kategoriler olacak mı?
+OK-05: Aynı akademik dönemde işletme değişikliği ve History kaydı nasıl tutulacak?
+OK-06: Sınıf tablosunda 'Sil' işlemi arşivleme mi, geçmişsiz hatalı kayıtta fiziksel silme mi?
+OK-07: Haftalık raporda işletme ön onayı gerekecek mi?
+OK-08: İşletme/okul puan ağırlığı ve devamsızlık uyarı eşiği nedir?
+Öğretmen kesin karar vermeden bunları tamamlandı/kararlaştırıldı diye yazma.
+
+A9. ESKİ USE CASE İLE YENİ v3.0 ARASINDAKİ DÜZELTMELER
+- Veli öğrenci değerlendirmesi yapmaz; salt okunur sınır netleştirildi.
+- Öğrenci kendi yoklamasını girmez.
+- İşletme yetkilisinin yoklama ve öğrenci değerlendirme ilişkisi açık.
+- Koordinatörün işletme ziyareti açık.
+- Okul > alan > program/sınıf > öğrenci > History yapısı eklendi.
+- Veli telefonu tekil; çoklu çocuk/çoklu veli ilişkileri açık.
+- Güvenli parola üretici ve sınıf katalogları eklendi.
+- UML include/extend yönleri düzeltilmiş olarak tanımlandı.
+- QR yoklama, PDF/Excel dışa aktarma, dış e-posta gibi eski taslak fikirleri yeni Use Case'in mevcut kapsamı diye sunma; CSV ve uygulama içi bildirim hedefi korunur.
+
+A10. YENİ AI İÇİN İLK 20 DAKİKALIK İNCELEME PLANI
+1. Kullanıcının görevini ve yetki sınırını öğren; salt okuma mı kod değişikliği mi?
+2. Gerçek depo ve commit durumunu oku; proje yolunun varlığını doğrula.
+3. README, routes, src, templates, migrations, tests, docs/delivery kaynaklarını keşfet.
+4. Yeni v3.0 Use Case kapsamlı dokümanının tüm UC kartlarını ve 6 öğretmen görselini oku.
+5. Veritabanı şemasını ve gerçek kodu karşılaştır; örnek test verileri dışında özel veriyi kopyalama.
+6. UC bazlı izlenebilirlik matrisi oluştur: UC ID | Rol | Gereksinim | Route | Kod | Tablo | Test | Durum | Açık karar.
+7. Durumları MEVCUT/DOĞRULANDI, EKSİK, KISMİ, KARAR BEKLİYOR olarak ayır.
+8. Öğretmen onayı gerektiren OK-01..OK-08 için seçenekleri çıkar.
+9. Kullanıcı kodlama istemediyse hiçbir canlı servisi, veritabanını veya depoyu değiştirme.
+10. İstenen görev için küçük, geri alınabilir adımlarla ilerle ve gerçek test sonucu ver.
+
+A11. KABUL TESTİ İSKELETİ
+T1: Okul > alan > ATP/AMP sınıf > öğrenci > History gezinmesi ve sayaç doğruluğu.
+T2: Öğrenci kaydında sınıfın alana aitliği, tekil numara, geçersiz giriş.
+T3: Aynı telefonla ikinci çocuğu bağla, yeni veli hesabı açılmasın.
+T4: Bir öğrenciye iki veli bağla, her veli sadece yetkili çocuğu görsün.
+T5: Staj atamasında öğrenci+işletme+öğretmen+dönem bütünlüğü ve çakışma.
+T6: İşletme yoklama girsin; öğrenci doğrudan HTTP ile denediğinde 403.
+T7: Haftalık rapor taslak/gönder/düzelt/yeniden gönder/onay geçişleri.
+T8: Üç farklı değerlendirmenin rol ve kayıt sahipliği izolasyonu.
+T9: Filtreli rapor, yetkisiz veri sızıntısı olmadan CSV dışa aktarma ve formül koruması.
+T10: Arşiv döneminde yazma engeli, audit geçmişinin korunması.
+T11: 10 hatalı giriş/600 sn kilit ve 900 sn oturum (gerçek uygulamada yeniden doğrula).
+T12: Migration geri dönüş ve veri bütünlüğü; telefon/sınıf/atama geçişleri.
+
+A12. SINIRLAR, UYARILAR VE BAŞARI TANIMI
+- Gerçek okul/öğrenci/veli kişisel verilerini gereksiz paylaşma.
+- .env, API key, erişim tokenı, üretim veritabanı ve gizli dosyaları AI bağlamına yapıştırma.
+- Eski belgede yer alan özellikleri otomatik olarak güncel karar sayma.
+- Her kod değişikliğinde lint, test, diff, rol denetimi ve gerekiyorsa HTTP doğrulaması yap.
+- Çalışma başlatıldı veya komut exit=0, tek başına 'bitti' demek değildir.
+- Öğretmen kabulü ve canlı yayın, yerel testten farklıdır.
+- Kullanıcı yeni bir görev vermeden projeyi değiştirmeye başlama.
+
+A13. ANA USE CASE DOKÜMANINI NEDEN AYRICA OKUMALISIN?
+Bu birleşik TXT, yeni v3.0'ın 25 ana kullanım durumu, alt kullanım durumları, altı paket, aktör sınırları, beş ekran ve açık kararlarını özetler. Ancak 100 KB'ı aşan STS_USE_CASE_KAPSAMLI_DOKUMANI.md dosyasındaki her alternatif akış, UML ilişki ve ayrıntılı senaryo kartını birebir yeniden üretmez. Teknik uygulama veya UML doğrulaması için o dosyanın tamamını ayrıca oku. Kaynağa erişemiyorsan kullanıcıya bunu açıkça belirt.
+
+================== B. 17 KASIM 2026 ANA PROJE BAĞLAMI ==================
+# 12/A LAB1 — STAJ TAKİP SİSTEMİ
+## Yapay Zekâlar İçin Ana Proje Bağlamı, Karar Defteri ve Çalışma Sözleşmesi
+
+**Sürüm:** 2026-11-17 / araştırma birleştirmesi v2.0  
+**Amaç:** Bu belgeyi tek başına okuyan bir yapay zekânın 12/A Lab1 Staj Takip Sistemi projesinin geçmişini, mevcut mimarisini, rol ve güvenlik kurallarını, teslim beklentilerini, çalışma alanlarını, doğrulanmış ve belirsiz kararlarını anlayarak tutarlı biçimde yardım edebilmesi.  
+**Önemli:** Bu belge kaynakların yerine geçmez; ilgili görevde canlı kod, veritabanı şeması, Trello kartı, öğretmen kararı ve en son test raporu ayrıca okunmalıdır.
+
+---
+
+# 0. YAPAY ZEKÂYA BAŞLANGIÇ TALİMATI
+
+Sen, 2026–2027 eğitim-öğretim yılında 12/A Bilişim Teknolojileri LAB1 ekibinin **Staj Takip Sistemi (STS)** projesini anlayan teknik yardımcı olarak çalışıyorsun. Bu metin, projenin tasarım kararı ve mevcut uygulamasının ayrıntılı bağlamıdır; kullanıcı sana bundan sonra soru sorabilir, belge hazırlatabilir, kod yazdırabilir, hata düzelttirebilir, test, rapor, sunum veya dağıtım görevi verebilir.
+
+**Her görevde:**
+1. İstenen çıktı ile mevcut kaynakları ayırt et. Kullanıcı sadece açıklama istiyorsa sistemleri değiştirme. Kodlama istenirse mevcut depoya ve çalışan yapıya bak; sıfırdan başka bir proje yazma.
+2. Belge etiketlerini koru: `[HOCA]` öğretmenden gelen kural, `[EKİP]` ekip kararı, `[KOD]` doğrudan mevcut uygulama, `[TEST]` tarihli test bulgusu, `[TASLAK]` eski/öneri metni, `[AÇIK]` onay bekleyen nokta, `[ÖNERİ]` senin teknik iyileştirmen.
+3. **Plan, uygulanmış kod, yerel test, canlı dağıtım ve öğretmen tarafından kabul edilmiş teslim birbirinden farklı statülerdir.** Bunları asla eş anlamlı yazma.
+4. Öncelik: Kullanıcının güncel açık isteği; son tarihli öğretmen onayı; en yeni doğrulanmış ekip kararı; gerçekten çalışan kaynak kod + şema + test; daha eski rapor/sunum; geliştirme önerisi. İki kaynak çelişiyorsa farkı açıkça belirt.
+5. Gerçek kişi verilerini yalnız yetkili bağlamda işle. Gereksiz öğrenci telefonu, kişisel kimlik bilgisi, şifre, token, `.env`, API key, üretim veritabanı ve gizli arşivleri rapora veya AI promptuna kopyalama.
+6. Mevcut canlı tanıtım sitesini, Caddy yönlendirmelerini, diğer VPS servislerini, proje verisini ve özel yedekleri kullanıcı açıkça istemedikçe değiştirme. Üretime çıkış ayrı karar ve ayrı doğrulama gerektirir.
+7. Bir işi tamamladığını yalnız gerçek kanıttan sonra söyle: dosya + commit/diff + PHP lint/test/HTTP/rol kabulü + gerekiyorsa tarayıcı ve canlı okuma. Bir ajanın `exit 0` kodu tek başına yeterli değildir.
+8. Önce en küçük çalışan ve anlaşılır çözümü üret. Öğretmenin amacı yalnız kod miktarı değil, **mühendislik süreci, devredilebilirlik, problem çözümü, takip edilebilirlik ve sunulabilirliktir.**
+9. Öğrenciye veya öğretmene sunulacak içerikleri Türkçe, anlaşılır, kaynakla uyumlu hazırla. Kod isimleri, tablo ve dosya yolları mevcut projeyle tutarlı kalabilir.
+10. Her yeni karar için tarih, sorumlu, gerekçe, etkilenen modül, test ihtiyacı, risk ve onay kaydı tutulmasını öner.
+
+**Bu promptta olmayan veya eski kalan bilgiye dayanarak güncel erişim/çalışma durumu uydurma.**
+
+# 1. PROJE KİMLİĞİ
+
+- **Tam ad:** 12. Sınıf Staj Takip Sistemi — 2026–2027; kısaca STS.
+- **Ders/ortam:** 12/A Bilişim Teknolojileri, Yazılım Projesi 11–12 ve Web Programcılığı 11–12, LAB1.
+- **Danışman:** Oğuzhan Hoca adı 7 Kasım RC2 öğretmen teslim dosyasında geçer; daha erken konuşmalarda başka öğretmenler de görev paylaşımıyla yer alır.
+- **Kullanıcı kitlesi:** Okul yönetimi, koordinatör öğretmen, öğrenci, işletme yetkilisi/usta öğretici ve veli.
+- **Çözüm tipi:** Merkezi veriye dayanan, rol ve kayıt sahipliği denetimli, okulun staj süreçlerini yöneten modüler web uygulaması.
+- **Hedef:** Gerçek staj sürecinin yoklama, haftalık faaliyet raporu, işletme/öğretmen/öğrenci değerlendirmesi, öğretmen ziyareti, risk incelemesi, arşiv ve yönetim raporlamasını bir arada tutmak.
+- **İlk prototip:** PHP ile sunucu tarafında render edilen web. Masaüstü ve Android istemciler ana proje fikrinde bulunabilir ama ilk çalışan sürümün zorunlu bileşeni değildir.
+- **Önceki fikir:** Akıllı Sokak Hayvanı Besleme ve Takip İstasyonu; 28–29 Eylül 2026 döneminde iptal edildi. STS ile karıştırılmamalıdır.
+
+# 2. PROBLEM VE ÇÖZÜMÜN DEĞERİ
+
+Meslek lisesinde staj gören öğrencinin hangi işletmede, hangi öğretmen sorumluluğunda, hangi tarihlerde bulunduğu; devamının ve faaliyet raporunun onaylanıp onaylanmadığı; işletmenin öğrenci hakkındaki görüşleri, öğrencinin işletmenin öğrenme ortamına ilişkin görüşleri ve öğretmenin saha ziyaretleri farklı defter, kâğıt, elektronik tablo, ileti mesajı ve kişi hafızasında dağınık olabilir. Bu durum veri tekrarına, gecikmeli müdahaleye, yanlış yetkilendirmeye, kayıtlarda uyuşmazlığa ve dönem sonunda rapor oluşturma güçlüğüne neden olur.
+
+**STS çözümü:** Admin tarafından açılan hesaplar üzerinden beş rol, tekil akademik dönem–staj atamalarıyla ilişkilendirilir. İşletme günlük devam girer; öğrenci haftalık faaliyet raporu hazırlar; koordinatör öğretmen gözden geçirir, düzeltme ister veya onaylar; ilgili kişiler değerlendirme ve ziyaret kayıtları tutar; yönetim filtreli, denetlenebilir rapor alır. Veliye sadece kendi öğrencisinin sınırlı özeti gösterilir. Risk sinyalleri öğretmen incelemesini destekler; otomatik disiplin/başarısızlık kararı üretmez.
+
+**Başarı, yalnız çalışır bir giriş ekranı değildir:** doğru rol sınırları, kayıt tekilliği, geri izlenebilir audit, düzgün rapor, kullanıcıya anlaşılır arayüz ve test kanıtı da ürünün parçasıdır.
+
+# 3. KRONOLOJİ VE KAYNAK ÖNCELİĞİ
+
+| Dönem | Kaydedilmiş gelişme | Kanıt düzeyi |
+|---|---|---|
+| 21 Eylül 2026 | Öğretmenler problem-çözüm yaklaşımı, takım lideri, kaynak planı, GitHub ve Trello düzenini anlattı. 38 proje fikri listelendi. | [HOCA]/WhatsApp kayıtları |
+| 27–29 Eylül | Sokak hayvanı mama istasyonu fikrinden vazgeçilerek STS ana proje olarak benimsendi. | [EKİP]/eski proje ana dokümanı |
+| 29 Eylül–5 Ekim | Ayrıntılı proje belgesi, başlangıç gereksinimleri, beş rol, giriş ve veri modeli belirlendi. | [TASLAK]/Drive ana bağlam |
+| 5 Ekim | Admin kontrollü hesap, 10 hatalı giriş → 10 dakika kilit, 15 dakika hareketsizlik, 403 ve arşiv/audit kararları netleştirildi. | [EKİP]/ana bağlam |
+| 12 Ekim | Oğuzhan Hoca mühendislik tesliminin, UML/sınıf diyagramı, test ve temiz kodun önemini vurguladı. | [HOCA]/transkript temelli RC2 kaynak matrisi |
+| 18–19 Ekim | Rapor v1.7'de PHP + SQLite web çekirdeği ve ayrı yedekleme yaklaşımı yazıldı. | [EKİP]/rapor v1.7 |
+| 21–26 Ekim | Metin/senaryo/Use Case/Class/risk/takvim ve A4 baskı dosyaları oluşturuldu; Trello görevleri işlendi. | [EKİP]/Drive ve Trello |
+| 1 Kasım | Haftalık iş dağılımı Trello/WhatsApp'ta güncellendi. | [EKİP]/arşiv raporu |
+| 6–7 Kasım | `FirstVersion` modüler PHP/SQLite uygulaması RC1/RC2 adayına ulaştı, test/teslim belgeleri hazırlandı. | [KOD]/[TEST] tarihli VPS checkpoint |
+| 9 Kasım | WhatsApp sunucu kayıtları `FirstVersion/public` ve `demosites` yolunu iki ayrı yayın adresiyle ilişkilendirdi. | [TARİHLİ KAYIT]; canlı yönlendirme yeniden ölçülmeli |
+| 17 Kasım | Drive, GitHub, Trello, WhatsApp, VPS ve PC kaynaklarına salt okunur yeniden bakıldı. | [GÜNCEL ENVANTER]; her dosya/alt grup derinlemesine yeniden okunmadı |
+
+**Kaynaklar çelişirse:** 29 Eylül'deki MySQL/XAMPP önerisini 19 Ekim SQLite kararı ve 6–7 Kasım gerçek SQLite kodunun üstüne yazma. Ancak 7 Kasım RC2 açık kararlar listesinde **nihai SQLite/MySQL öğretmen onayı hâlâ açık** olduğundan, “SQLite kesinlikle resmî olarak onaylandı” deme. Gerçekte çalışan altyapı = SQLite; nihai kabul kararı = açık.
+
+# 4. GERÇEK UYGULAMA DURUMU — PLAN DEĞİL
+
+VPS üzerindeki `/home/Curocx/stajtakipsistemi/FirstVersion/` dizini 17 Kasım'da listelendi. Bu dizinde `src/`, `config/`, `migrations/`, `templates/`, `public/`, `tests/`, `runtime/`, `docs/`, `evidence/`, `bin/` ve `bootstrap.php` mevcut.
+
+**7 Kasım tarihli `CUROCX_TASK_CHECKPOINT.md` raporunun iddiaları:**
+- FirstVersion RC1/RC2 adayı oluşturuldu; öğretmen ve ekip incelemesine hazır olarak işaretlendi.
+- RC1 aşamasında 56/56 PHP lint, 26/26 alan/domain testi, 12/12 HTTP kabul testi geçtiği kaydedildi.
+- RC2 iyileştirmesiyle 27. test eklendi; bağımsız SQLite/statik doğrulamada 11 PASS / 0 FAIL / 1 SKIP_BLOCKED kaydedildi.
+- Chromium/Playwright ile 5 rol ve 4 görüntü alanı üzerinde ekran/akış kontrolleri, 76 görünümde 0 yatay taşma raporlandı.
+- `docs/delivery/` altında birleşik öğretmen teslim dosyası, gereksinim kanıt matrisi, diyagramlar, demo/kurulum kılavuzu ve 7 açık karar dosyası hazırlandı.
+- SQL şemasında 18 tablo ve 7 trigger, gerçek uygulamada 24 `STS\\*` sınıfı bulunduğu checkpoint tarafından bildirildi; yeni değişikliklerden sonra doğrudan sayılarak tekrar doğrulanmalıdır.
+
+**Bu araştırmada canlı `./bin/test` yeniden koşturulmadı.** Yukarıdakiler tarihli rapor kanıtlarıdır. Sırf kod klasörleri var diye bütün kullanıcı akışlarının sorunsuz yayımlanmış olduğu sonucu çıkarılmaz. İlk raporlar “kodlama sonra” derken 7 Kasım sonrası artık kodlama adımı başlamış ve RC2 adayı üretilmiştir.
+
+# 5. GERÇEK MİMARİ KARARLARI (FIRSTVERSION / ADR)
+
+`FirstVersion/docs/ARCHITECTURE.md` (6 Kasım) mevcut uygulamanın mühendislik kararlarını listeler:
+
+**ADR-01:** PHP 8.3 ile modüler monolit, sunucu tarafında üretilen Türkçe HTML. Gereksiz mikroservis ve harici CDN/framework zorunluluğu yok.  
+**ADR-02:** Geçici/uygulanan veri tabanı PDO SQLite; foreign keys, WAL, busy timeout, transaction/migration ilkeleri. MySQL'e otomatik uyumluluk iddiası yok.  
+**ADR-03:** 10 ardışık hatalı parola = 600 sn kilit. 900 sn hareketsizlik yalnız web oturumunu kapatır.  
+**ADR-04:** Açık kullanıcı kaydı yok. Hesap ve sıfırlama Admin üzerinden, parola hashlenmiş. İlk girişte zorunlu parola değiştirme yok.  
+**ADR-05:** Elle girilen devam ve koordinatör öğretmence değerlendirilen haftalık faaliyet raporları. QR/RFID, dosya yükleme, Excel import, SMS, native istemci ve otomatik uzak yedek transferi FirstVersion dışı.  
+**ADR-06:** Veli bağlı öğrencinin yalnız işletme/atama özeti ve devam sayılarını görür; ayrıntılı değerlendirme, öğretmen notu, risk ve CSV gösterilmez.  
+**ADR-07:** Değerlendirmeler 0–100 ham puan; %60/%40 yalnız opsiyonel örnek, resmî karne notu değil. Devamsızlık veya düşük puan sinyali insan incelemesine yönlendirir.  
+**ADR-08:** Kritik kayıtlarda fiziksel silme yerine arşivleme. Eski raporları bozmadan, denetim iziyle.  
+**ADR-09:** Yalnız `public/` web kökü; test, kod, runtime ve yedekler dışarıya yayınlanmamalı. İlk yerel çalışma izole loopback; üretim sitesini ve başka sunucu servislerini değiştirmeme.  
+**ADR-10:** İlk sürümde öğrencinin bir akademik dönemde bir staj eşleştirmesi; `UNIQUE(student_id, term_id)`. Dönem ortasında yatay geçiş veya geçmişe dönük aktarım ayrıca tasarlanmalı.
+
+## 5.1 Kod dizinleri ve sorumluluklar
+
+```text
+FirstVersion/
+├── public/            # web kökü ve statik varlıklar
+├── src/
+│   ├── Domain/        # bağımsız iş kuralları, doğrulama, haftalık akış, puanlama
+│   ├── Shared/        # saat/ortak soyutlamalar
+│   ├── Infrastructure/ # DB, migration, transaction, audit, bildirim
+│   ├── Identity/      # kullanıcı, kimlik, giriş, yetki
+│   ├── School/        # öğrenci, veli, öğretmen, işletme, dönem, eşleştirme
+│   ├── Tracking/      # yoklama, haftalık rapor, ziyaret, değerlendirme
+│   ├── Reporting/     # rol kapsamlı rapor ve CSV
+│   ├── Http/          # controller, session, CSRF, renderer
+│   └── Application.php
+├── templates/         # yalnız sunum; SQL veya yetki kararı burada verilmez
+├── migrations/        # numaralı SQLite şema evrimi
+├── tests/             # domain, HTTP kabul, bakım ve statik/SQLite doğrulama
+├── docs/delivery/     # öğretmen teslim belgeleri ve güncel diyagramlar
+├── evidence/          # eski kaynakların analizi, ekran/test kanıtları
+├── runtime/           # çalışma verisi; asla kamuya veya git'e kopyalama
+├── bin/               # CLI/test ve bakım araçları
+└── bootstrap.php      # bağımlılıkları bir araya getirme
+```
+
+**Mimari kural:** Domain HTTP veya veritabanına doğrudan bağımlı olmamalı. SQL repository katmanında parametrik yazılır. İş kuralları service katmanında, HTTP istekleri controller'da, arayüz şablonları templates altında kalır. Yetkilendirme her erişimde ve özellikle her veri satırında tekrar değerlendirilir. Değişiklikler gerekiyorsa atomik işlem içinde domain kaydı + audit + bildirim beraber tamamlanır. Eski form güncellemelerinde sürüm kontrolü kullanılır.
+
+# 6. BEŞ ROL VE YETKİ SINIRLARI
+
+| İşlem | Admin / idare | Öğretmen | İşletme yetkilisi | Öğrenci | Veli |
+|---|---|---|---|---|---|
+| Hesap/profil/dönem/eşleştirme | Tam yönetim | Yok | Yok | Yok | Yok |
+| Staj ve devam görme | Hepsi | Atanmışları | Bağlı işletmedekiler | Kendi | Bağlı öğrencinin özeti |
+| Devam ekleme/düzeltme | Yetkili | Hayır | Kendi stajyerleri | Hayır | Hayır |
+| Haftalık rapor taslak/gönderme | İdari kontrol | Hayır | Hayır | Kendi | Hayır |
+| Haftalık rapor onay/düzeltme isteme | Evet | Atanmışları | İlk sürümde hayır | Hayır | Hayır |
+| Ziyaret ve öğretmen değerlendirmesi | Evet | Atanmışları | Hayır | Hayır | Hayır |
+| Öğrenci işletmeyi değerlendirir | Başkası adına değil | Hayır | Hayır | Kendi adına | Hayır |
+| İşletme öğrenciyi değerlendirir | Başkası adına değil | Hayır | Atananlara | Hayır | Hayır |
+| Risk detay inceleme/CSV | Evet | Kapsamındaki kayıtlar | Hayır | Hayır | Hayır |
+| Bildirim görme | Kendi | Kendi | Kendi | Kendi | Kendi |
+| Audit/arşiv yönetimi | Evet | Hayır | Hayır | Hayır | Hayır |
+
+**Örnek:** Öğrenci URL'deki `student_id` değerini değiştirip başka öğrencinin bilgisine ulaşamaz. Yetkisiz adres `403 / Yetkiniz Yok` vermeli, geçerli oturumu otomatik silmemelidir. Liste, detay, güncelleme, dışa aktarma ve bildirim erişimi aynı sahiplik modelini kullanır. Kullanıcı adı `admin_` ile başlıyor diye Admin yetkisi verilmez.
+
+# 7. ANA İŞ AKIŞLARI
+
+## 7.1 Dönem ve hesap açma
+Admin akademik dönemi oluşturur; rol bazlı hesapları açar; öğrenciyi, öğretmeni, işletmeyi, işletme yetkilisini, veliyi ve ilgili ilişkileri kaydeder. Giriş adı veya e-posta benzersiz olmalıdır. Başlangıç parolası oluşturulduktan sonra yalnız hash saklanır. Başka birinin mevcut parolası sonradan okunmaz; yalnız yeni parola üretilir/sıfırlanır.
+
+## 7.2 Staj yerleştirme
+`student`, `teacher`, `workplace`, `term` ve başlangıç–bitiş tarihleriyle `internship` kurulur. Dönem aralığı ve öğrencinin aynı dönemdeki tekil ataması kontrol edilir. Yetkiler ve raporlama bu ilişkilere dayanır.
+
+## 7.3 Günlük devam
+İşletme yetkilisi kendisine ait işletmedeki öğrenci için **Geldi, Gelmedi, İzinli, Geç geldi** gibi desteklenen durumu seçer. Sistem tarih ve staj dönemini, sahipliği ve `(internship_id, date)` tekilliğini kontrol eder. Geçmiş kayıtlar koşullu olarak düzeltilebilir, sürüm ve audit izleri korunur. Dönem arşivlenince yeni değişiklik kapanır.
+
+## 7.4 Haftalık faaliyet raporu
+Öğrenci haftalık etkinliklerini `draft` olarak yazar, `submitted` yapar. Öğretmen `approved` veya `correction_requested` kararı verir; düzeltmede neden belirtilir; öğrenci yeniden gönderir. İşletme ön onayının zorunlu olup olmayacağı hâlâ onaya açık konudur. Bu senaryoyu zorunlu işletme onayı varmış gibi değiştirme.
+
+## 7.5 Ziyaret, karşılıklı değerlendirme, risk incelemesi
+Öğretmen işyeri ziyaretini/gözlemini girer ve okul değerlendirmesi yapabilir. İşletme öğrenciyi, öğrenci işletmeyi değerlendirir; puanlar ayrı tutulur. Varsayılan inceleme sinyali **bir veya daha çok devamsızlık günü** ya da **50'nin altında işletme/okul puanı** olabilir; bu eşikler resmî mevzuat sonucu değil, RC2 güvenli varsayılanıdır. Öğretmen risk incelemesini açıklamayla kapatır veya izler. Öğrenci hakkında otomatik kalma/geçme kararı verilmez.
+
+## 7.6 Raporlar ve CSV
+Admin genel, öğretmen yalnız atanmış staj kayıtları için filtreli rapor görür. Örnek filtreler tarih aralığı, dönem, sınıf, öğrenci, öğretmen, işletme, durum ve uygun risk alanlarıdır. Export yapılırken rol kapsamı korunur; CSV formül enjeksiyonu riski önlenir. Rapor sayıları bilinen sentetik fixture ile doğrulanır.
+
+## 7.7 Arşiv, audit ve bildirimler
+Kritik kayıtlar fiziksel olarak silinmeden arşivlenir. Audit olayında işlem aktörü, türü, ilgili kayıt, güvenle kaydedilebilir eski/yeni alanlar ve zaman bulunur; parola, token, oturum kimliği veya hassas içerik audit'te saklanmamalıdır. Bildirim başka kullanıcıya atama değiştikten sonra önceki yetkiyi açık bırakmamalıdır.
+
+# 8. VERİ MODELİ — KAVRAMLAR VE KISITLAR
+
+Yeni ilkeler `FirstVersion/docs/ARCHITECTURE.md` içindeki fiilî modele göredir. Eski 29 Eylül taslaklarında `parents`, `student_evaluations`, `workplace_evaluations` gibi ayrı tablolar önerilmişti. FirstVersion uygulaması **`guardians`, `officials`, `guardian_students`, `workplace_users` ve tür (`kind`) alanı üzerinden `evaluations`** modelini kullanır. Yeni bir özellik eklenirken eski taslağı doğrudan koda yapıştırma.
+
+- `roles` → `users`: kimlik doğrulama hesabı ve rol. `username`, `email` tekil; `password_hash`, `failed_attempts`, `locked_until`, oturum/audit zaman alanları.
+- Rol profilleri: `students`, `teachers`, `guardians`, `officials`; kişi ve iletişim bilgileri kullanıcı giriş tablosunda gereksiz yere biriktirilmez.
+- `workplaces` işletme bilgileri; `workplace_users` işletme–yetkili bağlantısı.
+- `guardian_students` veli–öğrenci ilişkisinin çoktan çoğa modellenmesini sağlar.
+- `terms` akademik dönem. `internships` öğrenci, öğretmen, işletme, dönem ve tarihler arasındaki merkezî bağ.
+- `attendance` öğrenciye değil **staj kaydına** bağlanır; `UNIQUE(internship_id, date)`.
+- Haftalık faaliyet raporları aynı staj ve hafta için uygun tekillik ve durum geçişi kuralına bağlıdır.
+- `teacher_visits`, `evaluations`, `risk_reviews`, `notifications`, `audit_logs` ilişkili çalışma/denetim verileridir.
+- Yetki, sadece tabloda kayıt bulunmasına değil ilgili kullanıcı, işletme ve öğrenci ilişkilerinin güncel ve aktif olmasına bağlıdır.
+- Migration'lar `migrations/001_initial.sql`, `002_audit_immutable.sql` gibi sürümlüdür. **Gerçek şema değişikliği yapılmadan önce migration ve testler okunmalıdır.**
+
+**Asla yapılmamalı:** bir öğrenciyi başka öğrencinin staj kaydıyla ilişkilendirmek; arşivli dönem raporunu sessizce yeniden yazmak; soft-delete'den dolayı tarihsel kayıtları kaybetmek; audit log'u şifre deposu hâline getirmek; demo/üretim SQLite dosyasını GitHub'a koymak.
+
+# 9. GÜVENLİK VE DAYANIKLILIK ŞARTLARI
+
+- Hash: PHP `password_hash(PASSWORD_DEFAULT)` ve `password_verify`; düz metin parola veritabanı ve loglarda bulunmaz.
+- Kimlik: kullanıcı adı veya e-posta + parola; admin kontrollü kayıt.
+- Geçici kilit: 10 yanlış giriş → 10 dakika; başarılı girişte sayaç sıfırlanır.
+- Idle timeout: 15 dakika pasiflik yalnız web oturumunu bitirir. Bir ay giriş yapılmadı diye hesabı otomatik silme.
+- HTTP erişimi: hem rol hem kayıt sahipliği; `403` durumunda mevcut oturum korunur.
+- POST ve mutasyon: CSRF kontrolü, sunucu tarafında validation, sürüm kontrolü ve uygun atomik transaction.
+- SQL: PDO parametreli sorgular; kullanıcı girdisiyle SQL birleştirilmez.
+- HTML: çıkışta escaping; XSS, IDOR ve CSV formül riskleri test edilir.
+- DB: SQLite foreign key enforcement, WAL, busy timeout, UNIQUE ve transaction; audit bütünlüğü korunur.
+- Günlükleme: parola, API key, DB dosyası, hassas istek gövdesi ve oturum kimliği loglarda yer almamalıdır.
+- Yedek: 19 Ekim raporunda **canlı SQLite (sunucu) + tutarlı yerel yedek + Drive'da şifreli dış kopya** bir plan olarak belirtilmiştir. 7 Kasım kodunda yerel backup/restore doğrulanmış olabilir; **Drive'a otomatik off-site yedek aktarımı ve ikinci sunucu failover'ı kurulmuş sayılmaz**. RPO/RTO, saklama sıklığı ve geri dönüş tatbikatı açık kararlardır.
+- Üretim: `public/` dışındaki kaynaklar HTTP üzerinden indirilemez olmalı; mevcut Caddy ve diğer servislerin etkilenmemesi zorunludur.
+
+# 10. MEB / ÖĞRETMEN TESLİM BEKLENTİSİ
+
+Öğretmen kayıtları ve VPS'deki RC2 teslim dosyasına göre mühendislik dosyası şu çıktılara odaklanır:
+
+1. Kapak, sınıf ve ekip/görev dağılımı.
+2. Proje senaryosu ve gerçek problem.
+3. İhtiyaç analizi (kim, neye ihtiyaç duyuyor ve mevcut yöntem neden yetersiz?).
+4. Gereksinim analizi (işlevsel, işlevsel olmayan, donanım/yazılım ve kabul kriterleri).
+5. Proje yönetim süreci ve haftalık takvim (Trello, Drive, GitHub izleri).
+6. Risk analizi: olasılık/etki ve **Plan A / Plan B**.
+7. Yazılım sözleşmesi / kapsam ve ekip sorumlulukları.
+8. Use Case diyagramı ve rol sınırları.
+9. UML Class diyagramı (sınıflar, metotlar, ilişkiler).
+10. ER ve veritabanı tasarımı (ilişkiler, veri bütünlüğü).
+11. Ekran tasarımları ve tutarlı görsel standart.
+12. Kodlama çıktıları ve anlaşılır klasör yapısı.
+13. Black-box + white-box test kanıtı; bakım, güncelleme ve devredilebilirlik notları.
+
+**Kritik:** Proje dosyasına koyulan QR kod, öğretmen bağlamında çoğunlukla Trello/Drive/GitHub bağlantılarını açmak içindir; uygulama içinde QR yoklama zorunluluğu olduğuna kanıt değildir. 19 Ekim ders notlarına göre basılı mavi proje dosyası, düzenli sayfa ve bağlantı karekodları beklenmiştir. Zorunlu teslim biçimi güncel öğretmen talimatıyla yeniden teyit edilmeli.
+
+# 11. TASARIM DİLİ VE UX
+
+Önceki 19 Ekim raporunda koyu lacivert, beyaz/açık gri ve sınırlı turkuaz/mavi vurgu kullanılmıştır. Ancak ekranın amacı marka görselinden önce kullanıcının işini kolaylaştırmaktır. Bütün ekranlarda aynı anlamdaki butonlar aynı renk/boyut/konum standardını kullanmalı; tablo, form, hata ve başarı durumları erişilebilir olmalı. Öğretmen özellikle temiz kod ve sonradan teslim alacak bir geliştiricinin anlayabileceği tasarım istemiştir.
+
+Temel ekranlar: giriş, Admin paneli, kullanıcı yönetimi, dönem ve staj eşleştirme, öğretmen paneli ve bağlı öğrenciler, işletme yoklaması, öğrencinin haftalık faaliyet raporu, değerlendirmeler, veli özeti, rapor merkezi, risk incelemesi, arşiv/audit. Kullanıcının görmemesi gereken menüyü gizlemek yetki kontrolü yerine geçmez.
+
+# 12. EKİP VE GÖREV İZLERİ
+
+VPS RC2 öğretmen teslim dosyasının 7 Kasım tarihli tablosunda **beş kişilik ekip** şu biçimde geçiyor: Cüneyt (koordinasyon, güvenlik/veri bütünlüğü, ER/veritabanı, sunucu), Hasan (kimlik/oturum, proje senaryosu, klasör düzeni), Ali Eren (roller, yetki, Use Case, klasör düzeni), Kadriye/Damla (arayüz/Figma, süreç/takvim, dosyalama), Batuhan (risk, A/B planları, test ve klasör). `Kadriye/Damla` basılı resmî ad biçimi dosyada açık bırakılmıştır; burada tahmin edilmemelidir.
+
+Trello'daki 12A panosunda görülen örnek atamalar: Cüneyt = ihtiyaç analizi, gereksinim, veri; Cüneyt + Damla = takvim/sözleşme; Cüneyt + Batuhan = risk; Hasan + Ali Eren = Use Case ve Class; Hasan = proje senaryosu; Damla = proje yöntem süreci ve kapak. Ekim sonundaki çok sayıda kartın `dueComplete:true` olması **Trello işaretidir**, kabul edilen dosyaların öğretmen tarafından resmen onaylandığı anlamına gelmez. Görev sahibi ve durumun günceli için kartı yeniden aç.
+
+**Takım ilkesi:** Kim ne yaptı Trello kartı, Drive/Docs/PDF, kod commit'i veya test kanıtıyla gösterilsin. Herkes sunumda yaptığı işi açıklayabilsin. Takım lideri yalnız başkan değil teknik koordinasyon ve engel kaldırma sorumluluğu üstlenir.
+
+# 13. DİJİTAL ÇALIŞMA ALANLARI VE KANIT HARİTASI
+
+## 13.1 Google Drive
+
+Ana ortak klasör: `https://drive.google.com/drive/folders/1c1Vr4r_wj0Mc2Fm_NpJ0PZFzbqlzj3fj`  
+A4 baskı/dosyalama alt klasörü: `https://drive.google.com/drive/folders/1xyIo4pU20it4eXMfT5J6zmVOOn7D7dO6`
+
+17 Kasım sorgusunda birincil bağlı Drive hesabında proje raporu v1.7, sunum A4/A5, ER/profesyonel tasarım, ihtiyaç analizi, Hasan birleşik senaryosu, eski master bağlam `.md` ve `.txt`, sınıf ders kitapları ve 12 Kasım tarihli yeni PDF hazırlık çalışmaları görüldü. İkinci bağlı Drive hesabının “Staj” araması boş döndü; bu, o hesapta hiçbir ilgili dosya olmadığına kesin kanıt değildir. Proje klasörünün 4 klasör/39 öğelik 6–7 Kasım envanterini `evidence/drive-envanter.json` ve `docs/ARGON_SOURCE_RECONCILIATION.md` karşılaştırması kayıt altına alır.
+
+**İlgili eski master:** `01_AI_Master_Proje_Baglami_Guncel.md` (5 Ekim). Değerli tarihçe içerir ama kod öncesi durum, tablolardaki eski isimler ve MySQL/SQLite arasındaki geçiş açısından son sürüm değildir.
+
+## 13.2 GitHub
+
+`https://github.com/curoc1/12a-yazilim-projesi-2026`  
+17 Kasım bağlı hesap listelemesi bu repoyu **public** ve küçük boyutlu olarak gösterdi. Eski tasarım belgeleri private repo önerirken mevcut GitHub metadata public diyor. Bu görünürlük farkı **risk ve çözülmesi gereken yetki kararıdır**; kullanıcı onayı olmadan repoyu değiştirme. VPS `FirstVersion` içindeki uygulamanın otomatik olarak bu depoda tam ve güncel olduğu iddia edilmemeli. Canlı SQLite, şifre, token ve yedekler kesinlikle git'e konmamalı.
+
+## 13.3 Trello
+
+`https://trello.com/b/qvf5OWfq/12a-yaz%C4%B1l%C4%B1m-projesi-2026-2027`  
+17 Kasım bağlı Trello hesabında 12A panosu görüldü, kartların bir bölümü okundu. İlk ekip Trello listeleri fikir, yapılacak, bu hafta, yapılan, inceleme ve tamamlandı gibi çalışma aşamalarına göre düzenlenmiştir. Kartlara sorumlu, kabul kriteri, tarih ve çıktı linki yazılması beklenir. Bağlı ikinci Trello hesabındaki yemek paylaşım panosu STS'ye ait olmadığı için proje kaynak listesine karıştırılmamalı.
+
+## 13.4 WhatsApp topluluğu — gerçek mesaj kaynakları
+
+CurocX WhatsApp v5 bağlı köprüsü 17 Kasım'da iki hattı **connected** olarak gösterdi. Gizlilik koruması grup adlarını sıklıkla `Sansürlü Grup XX` olarak döndürür; bu, ilgili grubun gerçek adını doğrudan göstermemektedir. VPS kaynak birleştirme raporu ana STS topluluğunu `120363430443266760@g.us` olarak sınıflandırdı ve 11 alt grup kaydetti.
+
+Önceki arşiv doğrulaması:
+- `Ana konu` (`120363430939849520@g.us`) — 93 mesaj, 21 Eylül–22 Ekim tarih aralığı.
+- `Drive` (`120363429493898965@g.us`) — 26 mesaj.
+- `Trello` (`120363432753243387@g.us`) — 4 mesaj.
+- `Github repo` (`120363429751437281@g.us`) — 13 mesaj.
+- `Sunucu` (`120363428422375029@g.us`) — ilk arşivde 19 mesaj, sonradan yeni mesajlarla genişledi.
+- 6 diğer alt grup ve üst topluluk için önceki arşivde tam mesaj kaydı bulunmadığı açıkça raporlandı.
+
+Bu beş alt gruptaki **155 mesajın** 7 Kasım kaynak uzlaştırma aşamasında okunduğu checkpoint'te belirtiliyor. Bu araştırmada `Ana konu` için 93 ve `Sunucu` için daha güncel 38 mesaj ayrıca doğrudan alındı. Grubun içinde paylaşılan parolalar veya kimlik belgeleri korumalı/sansürlüdür ve AI bağlamına dahil edilmemiştir.
+
+**WhatsApp çalışma kanalları hakkında önemli ayrım:** Önceki sunucu kurulum kayıtlarında `Ana konu` yalnız sohbet odaklı, `Drive` gerçek ek dosya yükleme, `Trello` görev istekleri ve `Github repo` otomasyonu başlangıçta ertelenmiş ayrı bir rota olarak tarif edilmiştir. Bu entegrasyon davranışları bugün kullanılacaksa gerçek servis davranışı tekrar test edilmelidir; WhatsApp'taki mesajlar teknik yetki belgesi değildir.
+
+## 13.5 VPS — EN GÜNCEL GERÇEK KOD KAYNAĞI
+
+Proje kökü: `/home/Curocx/stajtakipsistemi/` — büyük harf `Curocx` önemlidir.  
+RC2 uygulaması: `/home/Curocx/stajtakipsistemi/FirstVersion/`  
+Ayrı tanıtım sitesi dosyaları: `/home/Curocx/stajtakipsistemi/demosites/`  
+RC2 öğretmen dosyaları: `FirstVersion/docs/delivery/`  
+Checkpoint: `FirstVersion/CUROCX_TASK_CHECKPOINT.md`
+
+17 Kasım'da `FirstVersion` dizini ve `demosites` mevcut olarak listelendi. `demosites` içinde `index.html`, favicon dosyaları ve `assets` görüldü. Proje README'si eski Caddy sembolik bağlantısının `demosites`e gittiğini söylüyor. WhatsApp'taki 9 Kasım sunucu raporu şu iki adres için farklı yayın klasörü bildiriyor:
+- `stajtakipsistemi.com`: `FirstVersion/public/`
+- `demo.stajtakipsistemi.com`: `demosites/`
+
+**Bu iki tarihli kaynak Caddy eşlemesinde farklı bilgiler veriyor.** Güncel Caddy config, gerçek HTTP response ve webroot hash doğrulaması yapılmadan hangi URL'nin RC2 uygulamasını yayınladığı kesin yazılmamalıdır. Bu analizde canlı URL testi yapılmadı. `www.stajtakipsistemi.com` için de gerçek yanıt/redirect tekrar ölçülmelidir.
+
+Önemli: 9 Kasım civarındaki bir backup isteğinin sonucunun WhatsApp otomasyonu tarafından “servis kesintisi nedeniyle belirsiz” işaretlendiği görülüyor. Dolayısıyla `Backup/v1` gibi bir yedeğin başarıyla oluştuğu **iddia edilmemeli**, ilgili dosya ve hash okunarak doğrulanmalıdır.
+
+## 13.6 Kişisel bilgisayar / İndirilenler
+
+17 Kasım CurocX PC Files köprüsü `pc-main` çevrimiçi olduğunu doğruladı. `C:\\Users\\Curoc1\\Downloads` dizini listelendi; Ekim dersi için çoklu ASR metinleri, 12 Ekim ses/transkriptleri, A4 ihtiyaç analizi görselleri/PDF'leri ve STS Use Case PDF kopyaları görüldü. Örnekler: `12_Ekim_Oguzhan_Hoca_Ders_Bolumu_Otomatik_Transkript.txt`, `12 ekim öncesi hoca konuşmaları.txt`, `1_Use_Case_Diyagrami_STS_Final.pdf`. Bu tarama **indirme klasöründeki bütün dosyaların içerik okuması değildir**; sadece ilgili dosyaların varlığı saptandı. `C:\Users\Curoc1` dışındaki diğer kullanıcıların klasörleri proje kaynağı sayılmamalıdır.
+
+## 13.7 Codex ve AGY
+
+17 Kasım CurocX Codex/AGY supervisor arayüzünde `staj` sorgusu için oturum araması boş döndü; bu, WhatsApp'taki Codex istekleri veya VPS checkpoint'inde yer alan önceki ajan çalışmalarının hiç yapılmadığını kanıtlamaz. Oturum arama indeksinin kapsamı/kısıtları vardır. Geçmiş otomasyon sonuçları için `FirstVersion/CUROCX_TASK_CHECKPOINT.md`, `docs/ARGON_*`, `evidence/verification/` gibi **gerçek dosya izleri** daha güvenilir kaynaklardır. Bir ajanı devam ettirmek için yalnız adı değil somut job/session ID ve güncel durum doğrulanmalıdır.
+
+# 14. RC2'NİN YEDİ AÇIK KARARI — UYDURMA YOK
+
+**Kaynak:** 7 Kasım `FirstVersion/docs/delivery/RC2_ACIK_KARARLAR.md`.
+
+| Kod | Açık karar | RC2'de şu an kullanılan varsayılan |
+|---|---|---|
+| OD-01 | Haftalık raporda işletme ön onayı gerekiyor mu? | Öğrenci → koordinatör öğretmen/Admin; işletme okuyabilir. |
+| OD-02 | Resmî dönem notu %60 işletme/%40 okul birleşimi mi? | Her puan ayrı gösteriliyor; örnek birleşim kapalı ve resmî değil. |
+| OD-03 | Devamsızlık ve düşük puan için hangi risk eşikleri kullanılmalı? | En az bir yoklama devamsızlığı veya 50 altı puan inceleme sinyali. |
+| OD-04 | Geçmiş yoklama en fazla kaç gün geriye dönük düzeltilebilir? | Aktif dönemde sürüm + audit ile düzenleme; arşivde kilitli. |
+| OD-05 | Basılı dosyadaki eski Use Case/Class/ER görselleri yeni şemaya göre değiştirilecek mi? | `docs/delivery/DIAGRAMS.md` güncel şemayı temsil ediyor. |
+| OD-06 | RC2 hangi tarihte ve hangi adreste canlıya alınacak? | Yerel/izole çalışma; prod'a otomatik geçiş yok. |
+| OD-07 | Son teslimde SQLite kabul ediliyor mu, MySQL istenir mi? | PHP 8.3 / PDO SQLite çalışır; öğretmen onayı açık. |
+
+Bunların hiçbiri “öğretmen zaten onayladı” şeklinde sunulmamalıdır.
+
+# 15. SCOPE / SÜRÜM SINIRLARI
+
+**FirstVersion'da fiilen ele alınan temel işler:** beş rol, kullanıcı/admin yönetimi, akademik dönem ve staj ataması, günlük devam, haftalık rapor/düzeltme/onay, öğretmen ziyareti, değerlendirmeler, bildirim, risk incelemesi, CSV rapor, arşiv, audit, güvenlik ve yerel yedek/geri yükleme.
+
+**İlk sürümde zorunlu olmayan veya dışarıda tutulanlar:** QR/RFID/kart yoklaması, SMS, kapsamlı e-posta servis altyapısı, native Android ve Windows uygulaması, gelişmiş AI karar verme, Excel dosya importu, otomatik offsite yedek transferi, otomatik alternatif sunucuya failover, birkaç okula aynı anda hizmet veren çok kiracılı SaaS. Bunlar ileride planlanabilir ama mevcut uygulamada varmış gibi gösterilmez.
+
+**Ortak platform ilkesi:** gelecekte web/masaüstü/Android bağlantısı düşünülürse tek veri modeli, tek yetki politikası ve kontrollü API üzerinden tasarlanır. Mobil uygulamayı ikinci, bağımsız ve çelişkili veri tabanına bağlama.
+
+# 16. TEST VE KABUL KONTROL LİSTESİ
+
+1. Admin yeni hesap oluşturur; email/username tekildir; aktif/pasif ve sıfırlama doğru çalışır.
+2. 10 ardışık yanlış parola tam 10 dakikalık kilit üretir; başarılı girişte sayaç sıfırlanır; zamanlar sahte saatle test edilir.
+3. 15 dakikalık pasiflik yalnız mevcut oturumu sonlandırır, hesabı kapatmaz.
+4. Öğrenci başka öğrenciyi; işletme başka işletmenin öğrencisini; veli başka çocuğu göremez.
+5. Yetkisiz URL ve dışa aktarma 403 verir; var olan geçerli oturum korunur.
+6. Staj/eşleştirme döneme uygun ve tekildir; arşivli kayıt tarihi korunur.
+7. Aynı gün çift devam yazılamaz; gelecekte/aktif dönem dışında tarih reddedilir; yetkisiz düzeltme engellenir.
+8. Öğrenci haftalık taslak→gönder→düzeltme isteği→yeniden gönder→onay akışını tamamlar.
+9. Değerlendirmeler rol ve sahipliğe uygun yazılır; 0–100 dışındaki puanlar reddedilir.
+10. Risk sinyali veriyle uyumludur, otomatik resmî ceza kararı vermez.
+11. Rapor filtre ve toplamları kontrollü fixture ile uyuşur; CSV export yetki/format açısından doğru.
+12. Mutasyonlar CSRF, XSS, SQLi/IDOR, yarış durumu ve eski form (`version`) testlerinden geçer.
+13. Audit kritik değişiklikleri tutar, secret tutmaz; geçmiş saklama ve geri getirme test edilir.
+14. SQLite yedeği `integrity_check` ile doğrulanır, **izole test dizininde** geri yüklenir; canlı DB üzerine körlemesine restore yapılmaz.
+15. Mobil/masaüstü viewport'ları, klavye ve mesaj erişilebilirliği, Türkçe metin ve tutarlı buton stili kontrol edilir.
+16. Üretime çıkarılacaksa gerçek HTTPS/domain/Caddy yönlendirmesi, webroot, HTTP yanıtı, API/oturum/rol smoke test ve geri dönüş planı ayrı yürütülür.
+
+# 17. GELECEKTE BİR YAPAY ZEKÂDAN GÖREV İSTEME ŞABLONLARI
+
+## 17.1 Kod özelliği
+“Bu STS ana bağlamını kullan. Önce `/home/Curocx/stajtakipsistemi/FirstVersion` altındaki ilgili `src`, `migrations`, `templates`, `tests`, `docs` dosyalarını oku. [ÖZELLİK] için mevcut rol/sahiplik/SQLite/audit mimarisini bozmayacak en küçük değişikliği uygula. Test ekle/çalıştır. Değişen dosyalar, diff, test sonuçları, engeller ve üretime yansıyıp yansımadığını açıkça bildir. Canlı siteye izinsiz dokunma.”
+
+## 17.2 Yeni öğretmen raporu
+“Bu STS bağlamını, 7 Kasım `STAJ_TAKIP_SISTEMI_TESLIM_DOSYASI.md`, açık karar dosyası, güncel Trello ve öğretmen transkriptleriyle karşılaştır. Proje problemi, gereksinim, UML, risk Plan A/B, görev takvimi, test ve bakım alanlarını kaynak etiketleriyle Türkçe açıkla. Taslak ile fiilî çalışan kodu karıştırma; kesin onay almamış maddeleri açık tut.”
+
+## 17.3 Hata araştırma
+“STS'de [HATA] var. Önce hangi ortamda (demosites, FirstVersion, canlı ana alan adı) görüldüğünü kanıtla. Sorunlu uç noktanın rol, kayıt sahipliği, migration ve fixture bağlamını incele. Önce güvenli yeniden üretim/test, sonra küçük düzeltme; gerçek kullanıcı verisini açığa çıkarma. Doğrulama raporunu ekle.”
+
+## 17.4 Yedekleme, dağıtım ve VPS
+“STS ile ilgili [GÖREV]. Önce mevcut Caddy/domain/service yolunu ve gerçek veritabanı konumunu salt okunur doğrula. Önceki yedek iddialarını dosya/sha256 ile teyit et. Üretim değişikliği isteği açık değilse yalnız plan/izole test yap. Başka CurocX servislerine dokunma. Başarının kanıtı erişim + uygulama işlev testi + geri alma adımı olsun.”
+
+# 18. YAPAY ZEKÂNIN ASLA YAPMAMASI GEREKENLER
+
+- `Mama istasyonu` projesini yeniden STS kapsamına almak.
+- 5 Ekim master belgesini 7 Kasım RC2 kodundan daha yeni kabul etmek.
+- QR bağlantı karekodlarını QR yoklama mecburiyeti sanmak.
+- SQLite üzerinde çalışan kodu, sırf eski kitapta MySQL yazıyor diye baştan yazmak.
+- Öğretmenin resmî not ağırlığını veya risk eşiğini uydurmak.
+- `students` / `parents` gibi eski şema alanlarını gerçek uygulamaya bakmadan eklemek.
+- Public görünen GitHub deposuna gerçek öğrenci verisi, parolalar, SQLite veya yedek koymak.
+- Admin oturumunda başka kullanıcı adına gerçek değerlendirme uydurmak.
+- “Ekran menüsü gizli, güvenlik sağlandı” demek; server-side sahiplik şarttır.
+- WhatsApp'ta botun “tamamlandı” yanıtını test/sunucu kanıtı sanmak.
+- RC2 kodunu, canlı demo ve alan adı siteleriyle aynı sürüm kabul etmek.
+- `backup` isteği yarıda kalmışsa doğrulamadan tekrar yazıp mevcut veriyi riske atmak.
+- Ekip üyelerinin öğrenci numaralarını, özel bilgilerini veya kimliklerini tahmin etmek.
+- Öğretmen onayı olmadan açık kararları “kesin” olarak basılı teslim dosyasına koymak.
+
+# 19. SÜREKLİ GÜNCEL TUTULACAK KAYIT
+
+Yeni gelişmelerde AI bu dosyanın sonuna şu yapıda tarihli bir değişiklik günlüğü eklemelidir:
+
+```text
+Tarih/saat (Europe/Istanbul):
+Kaynak (GitHub commit / VPS dosya + hash / Trello kart / Drive belge / öğretmen):
+Değişiklik veya karar:
+Statü: ÖNERİ / ONAY BEKLİYOR / KODLANDI / TEST EDİLDİ / CANLIDA DOĞRULANDI / KABUL EDİLDİ
+Etkilenen rol/modül/veri:
+Test ve kabul kanıtı:
+Yeni risk ve geri dönüş:
+Sorumlu / onaylayan:
+```
+
+# 20. BİLİNEN SINIRLAR VE SONRAKİ DENETİM İÇİN HEDEFLER
+
+Bu derleme kapsamlıdır; ancak **“bütün dosyalar eksiksiz okundu”** iddiası değildir. 17 Kasım'da WhatsApp'ın Ana konu ve Sunucu mesajları doğrudan, bağlı Drive'ın ilgili dosya listesi ve eski master metni, Trello panosunun büyük bölümündeki kartlar, VPS'de gerçek mimari/RC2 açık karar/teslim/checkpoint ve PC İndirilenler listesi görüldü. Diğer WhatsApp alt grupları ve dosyalarının bir kısmı için 7 Kasım tarihli kaynak uzlaştırma raporuna dayanıldı. PC Indirilenler'deki ses/PDF dosyalarının tamamı teker teker açılmadı. Codex/AGY ham transcriptleri dönen arama aracında erişilebilir değildi; yapılan işlerin kanıtı olarak VPS raporları kullanıldı.
+
+**Bir sonraki derin doğrulamada yüksek öncelikli maddeler:**
+- Güncel canlı Caddy sanal hostları ve domain → `FirstVersion/public` / `demosites` eşleşmesi.
+- `FirstVersion` için bugün `./bin/test` ve varsa izole HTTP testleri; test fixture'larının üretim DB'sine dokunmadığını doğrulama.
+- `migrations/` gerçek tablo/trigger sayımı ve teslim diyagramlarının şemayla birebir karşılaştırılması.
+- Öğretmen OD-01…OD-07 kararları, basılı dosyalar ve en son teslim tarihi.
+- Ortak Drive'daki en yeni v2 gereksinim metni ve 12 Kasım PDF eklerinin içerik farklarının ayrıntılı karşılaştırılması.
+- GitHub repo görünürlüğünün/commitlerinin ve VPS ana koduyla ilişkilerinin kesinleştirilmesi.
+- Uzak Drive şifreli yedeklerinin gerçekten oluşturulup oluşturulmadığı ve geri yükleme tatbikatı.
+- Eksik WhatsApp alt grup arşivleri, güncel Trello yorumları/ekleri ve çalışan AGY/Codex işlerindeki yeni kararlar.
+
+# 21. KAYNAK LİSTESİ — İZLENEBİLİR DAYANAK
+
+**[S1]** Kullanıcı tarafından bu çalışma alanına eklenen `Staj_Takip_Sistemi_2026-2027_Ayrintili_Proje_Dokumani.txt` (29 Eylül bağlamı).  
+**[S2]** `LAB1_Staj_Takip_Sistemi_Proje_Raporu_QR_Davet_v1_7.docx` (19 Ekim rapor revizyonu); sürüm etiketleri ve SQLite kararı.  
+**[S3]** `LAB1_Staj_Takip_Sistemi_Sunum_Trello_Davet_v1_7_A4.pptx` (19 Ekim sunum).  
+**[S4]** `Birlestirilmis_Transkript.txt` ve MEB `YAZILIM PROJESİ 11-12`, `WEB PROGRAMCILIĞI 11-12` kitapları.  
+**[S5]** Drive `01_AI_Master_Proje_Baglami_Guncel.md` — 5 Ekim: `https://drive.google.com/file/d/1sPAqQfhZMBKs6LeMCB-23AdUcb10cJzv/view`.  
+**[S6]** Drive `STS_2026-2027_Hasan_Birlestirilmis_Proje_Senaryosu (1).txt`: `https://drive.google.com/file/d/12KWUc81Mxz-3LGirbm2rQvtYDuHc7qrj/view`.  
+**[S7]** Trello 12A panosu: `https://trello.com/b/qvf5OWfq/12a-yaz%C4%B1l%C4%B1m-projesi-2026-2027`.  
+**[S8]** GitHub: `https://github.com/curoc1/12a-yazilim-projesi-2026` (17 Kasım listelemesinde public).  
+**[S9]** CurocX WhatsApp v5 `Ana konu` ve `Sunucu` mesajları, ayrıca VPS kaynak uzlaştırma raporunda yer alan diğer STS alt grupları.  
+**[S10]** VPS `/home/Curocx/stajtakipsistemi/README.md` ve `FirstVersion/docs/ARCHITECTURE.md`.  
+**[S11]** VPS `FirstVersion/CUROCX_TASK_CHECKPOINT.md` (7 Kasım RC2 aday test/teslim kaydı).  
+**[S12]** VPS `FirstVersion/docs/delivery/RC2_ACIK_KARARLAR.md` (7 adet açık karar).  
+**[S13]** VPS `FirstVersion/docs/delivery/STAJ_TAKIP_SISTEMI_TESLIM_DOSYASI.md` (13 bölümlü öğretmen teslim paketi).  
+**[S14]** VPS `FirstVersion/docs/ARGON_SOURCE_RECONCILIATION.md` (Drive, WhatsApp, öğretmen kayıtları ve PC kaynak uzlaştırması).  
+**[S15]** PC `C:\\Users\\Curoc1\\Downloads` canlı, salt okunur 17 Kasım dosya envanteri.
+
+---
+
+## Tek cümlelik son özet
+
+**STS, 12/A LAB1 ekibinin okul–öğretmen–öğrenci–işletme–veli arasında yetki sınırlarıyla stajı yöneten; PHP 8.3 + SQLite tabanlı `FirstVersion` RC2 adayı bulunan, mühendislik teslimi/raporlama/güvenliği ana hedef alan ve yedi önemli öğretmen-ekip kararı hâlâ açık olan 2026–2027 yazılım projesidir.**
+
+
+================== C. USE CASE v3.0 AYRINTILI GELİŞTİRME TALİMATI ==================
+
+STAJ TAKİP SİSTEMİ — USE CASE v3.0 TEMELLİ KAPSAMLI GELİŞTİRME VE REVİZYON TALİMATI
+Proje: SBİST MTAL — 2026–2027
+Çalışma dizini: /home/Curocx/stajtakipsistemi/FirstVersion
+
+1. GÖREVİN AMACI
+Mevcut Staj Takip Sistemi'ni öğretmenin 9 Kasım 2026 geri bildirimleri ve UML 2.5 Use Case v3.0'a göre kapsamlı analiz et. Bu yalnızca görsel tasarım işi değildir. Okul, alan, program, sınıf, öğrenci, veli, öğretmen, işletme, staj ataması, devam, rapor, değerlendirme, geçmiş, yetki ve denetim işlemleri tutarlı çalışmalıdır. Her gereksinimi MEVCUT (kod ve testle doğrulandı), GELİŞTİRİLECEK veya KARAR BEKLİYOR olarak sınıflandır. Diyagramda bulunması, kodda tamamlandığı anlamına gelmez.
+
+2. KAYNAKLAR
+Önce şu belgeleri incele:
+- docs/delivery/STS_USE_CASE_KAPSAMLI_DOKUMANI.md
+- docs/delivery/STS_USE_CASE_DIYAGRAMI.puml
+- docs/delivery/STS_USE_CASE_DIYAGRAMI.mmd
+- docs/delivery/STS_USE_CASE_A4_YATAY_V3.svg
+- evidence/teacher_board_refs/OGRETMEN_NOTLARI_20261109_ORIJINAL.txt
+- evidence/teacher_board_refs/REFERANSLAR_AGY.md ve listelenen altı tahta fotoğrafı
+Ayrıca src, templates, migrations, testler ve proje belgelerini incele. Kaynak çelişkilerini sessizce giderme; ayrı karar maddeleri olarak kaydet.
+
+3. GÜVENLİ BAŞLANGIÇ
+Git branch, commit, çalışma ağacı, mevcut uygulama durumu, SQLite şeması, migration geçmişi ve başlangıç test sonuçlarını kaydet. Kullanıcının commit edilmemiş değişikliklerini koru. Veritabanını sıfırlama, gerçek verileri silme, kontrolsüz migration uygulama. Önce yedekleme ve geri dönüş planı hazırla.
+
+4. ROLLER VE YETKİLER
+OKUL YÖNETİCİSİ: Okul/alan/program/sınıf/dönem, kullanıcı hesapları, veli-öğrenci bağlantısı, staj atamaları, parola sıfırlama, hesap durumu, raporlar ve denetim kayıtları. Tek uzun karmaşık yönetim ekranı yerine rol bazlı bölümler kullan.
+KOORDİNATÖR ÖĞRETMEN: Sorumlu olduğu öğrencileri görür, haftalık raporları inceler/onaylar/düzeltme ister, işletme ziyareti ve gözlem kaydeder, okul değerlendirmesi girer. Başkasının öğrencilerini yetkisiz değiştiremez.
+İŞLETME YETKİLİSİ: Bağlı işletmedeki öğrencileri görür, günlük yoklama girer/düzeltir, öğrenciyi 0–100 değerlendirir. Başka işletmenin verisine erişemez.
+ÖĞRENCİ: Kendi stajını görür, haftalık rapor taslağı oluşturur/gönderir/düzeltir, işletmeyi 0–100 değerlendirir, bildirim okur. KENDİ YOKLAMASINI GİREMEZ.
+VELİ: Yalnızca bağlı çocuklarının staj yeri ve devam özeti ile kendisine yönelik bildirimleri görür. Salt okunur; yoklama/rapor/değerlendirme düzenleyemez.
+Yetkiler hem arayüzde hem sunucu tarafında kontrol edilmelidir.
+
+5. TÜMDEN GELİM: BEŞ EKRAN
+1) OKUL: SBİST MTAL; alan, sınıf ve öğrenci sayaçları.
+2) ALANLAR: Okuldaki mesleki alanların kartları; dokuz alanın gerçek adları öğretmenden doğrulanmadan uydurulmasın.
+3) ALAN DETAYI: Sınıflar (ATP/AMP), koordinatör öğretmenler, işletmeler, ilgili veli/öğrenci bağlantıları.
+4) SINIF TABLOSU: Toplam/işletmede/atamasız öğrenci sayaçları. Öğrenci adı, okul numarası, işletme, koordinatör, veli, yetkiliye görünür telefon, detay/düzenle/arşivle.
+5) ÖĞRENCİ DETAYI: Kimlik, alan, program, sınıf, dönem, aktif işletme, koordinatör, veliler, staj tarihleri, yoklama, haftalık rapor, değerlendirme ve kronolojik History.
+Gezinme: Okul → Alan → Program/Sınıf → Öğrenci → History. Ekranlar öğretmenin tahta çizimiyle karşılaştırılmalıdır.
+
+6. ALAN / PROGRAM / SINIF
+Serbest metin '12A', '12-A', '12/A' gibi varyasyonlar üretmesin. Yönetici katalog kayıtlarını oluştursun; öğrenci formunda alan ve sınıf <select> üzerinden seçilsin. ATP/AMP ayrımı ayrı tutulsun. Veritabanında foreign key ilişkileri ve tekillik kuralları olsun. Seçilen sınıfın seçilen alana ait olduğu sunucuda da doğrulansın.
+
+7. ÖĞRENCİ KAYDI (UC-08)
+Alanlar: ad-soyad, tekil okul numarası, zorunlu e-posta, isteğe bağlı telefon, alan, program/sınıf, güvenli ilk parola. Kullanıcı adı otomatik önerilebilir. Form sade olsun; hatalar Türkçe gösterilsin; çok tabloluk işlemlerde transaction kullanılsın. Öğrenci kaydında veli zorunluluğu OK-01 kararı bekliyor.
+
+8. VELİ KAYDI VE EŞLEŞTİRME (UC-09, UC-09A)
+Telefon standart biçimi 5XXXXXXXXX (10 rakam, başında 0 yok); 05... ve +905... girişleri normalize edilsin. Bir telefon = bir veli hesabı; veritabanında UNIQUE koruması. Numara varsa mevcut veli getirilsin, yeni hesap ve yeni parola üretilmesin; yalnızca yeni çocuk bağlansın. Numara yoksa veli adı, isteğe bağlı e-posta, güvenli ilk parola ve en az bir öğrenci ilişkisi oluşturulsun (kesin kayıt sırası OK-01'e bağlı). Öğrenci seçerken numara, ad, alan, program ve sınıf önizlemesi gösterilsin. Bir veli birden çok çocuk, bir çocuk birden çok veli: guardian_students N:M tablosu korunmalı. Mükerrer veli kayıtlarını birleştirmeden önce güvenli veri planı hazırlanmalı. E-postasız velinin giriş biçimi OK-03 bekliyor.
+
+9. PAROLA ÜRETİCİ (UC-07, UC-07A)
+'Güvenli Parola Oluştur' butonu ekle. Kriptografik güvenli rastgele üretici kullan; düz metin parola DB veya loglara yazılmasın; güvenli hash kullan; parola sıfırlanınca eski oturumları geçersizleştir. Öğretmen 12 karakterden kısa parola istemiş, mevcut kod en az 12 karakter istiyor. OK-02 netleşmeden güvenlik politikasını düşürme; şimdilik 12 karakterlik güvenli otomatik üretim öner.
+
+10. ÖĞRETMEN VE İŞLETME (UC-10, UC-11)
+Öğretmen ve işletme yetkilisi için ayrı kayıt akışları olsun. Öğretmenin alanı ve sorumlu olduğu öğrenciler/sınıflar açıkça bağlı olsun. İşletme kaydı ile işletme yetkilisi hesabı ayrı modellensin. Gerekliyse bir işletmeye birden çok yetkili ve bir yetkiliye birden çok işletme bağlantısı korunmalı. Atamada yalnız aktif ve uygun kayıtlar listelensin.
+
+11. STAJ ATAMASI (UC-13)
+Öğrenci + İşletme + Koordinatör + Akademik Dönem eşleştirilsin. Öğrenci/işletme/öğretmen/dönem aktifliği, yetki ve çakışan atamalar doğrulansın. İşlem denetim günlüğüne yazılsın, ilgili kullanıcılara uygulama içi bildirim gitsin. Dönem içi işletme değişikliği eski yoklama ve raporları kaybetmeyecek şekilde tasarlansın; nihai kural OK-05.
+
+12. YOKLAMA (UC-16)
+İşletme yetkilisi yalnız kendi öğrencileri için tarih, devam durumu ve açıklama girsin. Aynı öğrenci/staj/tarih için mükerrer kayıt engellensin. Düzeltme denetim izinde kalsın. Öğrencinin yoklama yazma isteği sunucuda reddedilsin. Arşivlenmiş döneme yazılamasın.
+
+13. HAFTALIK RAPOR (UC-17, UC-18)
+Durum akışı: Taslak → İncelemeye Gönderildi → Onaylandı veya Düzeltme İstendi → Düzenlendi → Yeniden Gönderildi. Öğrenci taslak yazıp gönderir, öğretmen onaylar veya açıklamayla düzeltme ister. Onaylanan rapor sıradan taslak gibi değiştirilemez. Sunucu durum geçişlerini doğrular. İşletme ön onayı OK-07 bekliyor.
+
+14. İŞLETME ZİYARETİ (UC-19)
+Koordinatör işletme, ilgili öğrenci(ler), tarih, gözlem ve takip notlarını kaydeder. Yalnız yetkili olduğu kayıtlar için yazabilir. Ziyaret geçmişi öğrenci detayında ve raporlarda görülebilir.
+
+15. ÜÇ YÖNLÜ DEĞERLENDİRME (UC-20, UC-21, UC-22)
+İşletme öğrenciyi 0–100 puanlar; öğrenci işletmeyi 0–100 puanlar; koordinatör/yetkili yönetici okul değerlendirmesini 0–100 kaydeder. Üç kayıt ayrı tutulur; her rol yalnız kendi değerlendirmesini yapar. Resmî ağırlıklı not formülü OK-08 kesinleşmeden uygulanmasın.
+
+16. VELİ PANELİ (UC-15)
+Bağlı tüm çocukları listele. Her çocuk için sınıf, işletme, devam ve devamsızlık özeti göster. Yalnız okuma yetkisi ver; başka velinin çocuğunu gösterme. Use Case dışındaki ayrıntılı rapor/değerlendirme verilerini otomatik açma.
+
+17. RİSK VE RAPORLAMA (UC-23, UC-24, UC-24A)
+Eksik rapor, devamsızlık, düşük puan, atamasız öğrenci gibi göstergeler öğretmen incelemesine yardımcı olsun; otomatik ceza/başarısızlık kararı olmasın. Dönem, alan, program, sınıf, öğrenci, işletme, öğretmen ve staj durumuna göre filtrele. Yetkili verileri CSV olarak dışa aktar; Türkçe karakterleri koru, CSV formül enjeksiyonuna karşı önlem al. QR yoklama veya PDF/Excel ihracını sırf eski belgede geçti diye mevcut/tamamlanmış sayma.
+
+18. DENETİM (UC-25, SYS-02)
+Hesap oluşturma/durum değiştirme, parola sıfırlama, veli bağlantısı, staj ataması, yoklama düzeltme, rapor onayı, değerlendirme ve arşivleme işlemleri append-only denetim kaydına yazılsın. Normal kullanıcılar bu kayıtları değiştiremesin; sırlar loglanmasın.
+
+19. GÜVENLİK (UC-01/02/03/12, SYS-01)
+RBAC, kayıt sahipliği, CSRF, güvenli oturum/çıkış, parola hash, kilitleme, eşzamanlı güncelleme ve arşiv kısıtları test edilsin. Belgedeki 10 başarısız girişte 600 saniye kilit ve 900 saniye oturum sınırı gerçek kodla doğrulansın. Buton gizlemek yetmez; doğrudan HTTP isteği de yetkisizse reddedilsin.
+
+20. VERİTABANI EVRİMİ
+Okul/alan/sınıf katalogları, ATP/AMP, students.class_id, telefon normalizasyonu ve UNIQUE, nullable guardian e-postası, guardian_students N:M, History ve dönem içi işletme değişikliği, arşiv/denetim bütünlüğü incelensin. Eski kayıtları koruyan migration ve rollback tasarımı hazırla. Geçersiz sınıf, mükerrer telefon, tekrarlı öğrenci, eksik e-posta ve geçmiş atamaları raporla; sessizce silme/birleştirme yapma.
+
+21. ARAYÜZ
+Türkçe başlıklar, rol bazlı formlar, anlaşılır hata ve başarı mesajları, tutarlı tasarım, klavye erişimi, mobil uyum, kayıt doğrulama, kritik işlem onayı, arşivden geri yükleme. Tek uzun yönetim sayfasını öğretmenin beş ekranlı akışına göre sadeleştir.
+
+22. USE CASE KAPSAMI
+UC-01 Giriş; UC-02 Çıkış; UC-03 Bildirim; UC-04 Okul/alan; UC-05 Program/sınıf; UC-06 Dönem; UC-07 Parola sıfırlama; UC-07A Parola üretici; UC-08 Öğrenci; UC-08B Zorunlu veli (karar bekliyor); UC-09 Veli; UC-09A Telefonla bulma; UC-10 Öğretmen; UC-11 İşletme/yetkili; UC-12 Hesap durumu; UC-13 Staj ataması; UC-14 Sınıf tablosu/History; UC-15 Veli özeti; UC-16 Yoklama; UC-17 Haftalık rapor yazma; UC-18 Rapor inceleme; UC-19 Ziyaret; UC-20 İşletmenin öğrenci puanı; UC-21 Öğrencinin işletme puanı; UC-22 Okul puanı; UC-23 Risk inceleme; UC-24 Filtreli rapor; UC-24A CSV; UC-25 Denetim. SYS-01/02/03 ortak güvenlik/denetim/bildirim işlevlerini de incele. Her UC için rol, giriş noktası, kod, tablo, hata, test ve durum belirle.
+
+23. ÖĞRETMEN ONAYI BEKLEYEN KARARLAR
+OK-01 Öğrenci velisiz kaydedilebilir mi?
+OK-02 İlk parola uzunluğu ve ilk girişte değiştirme zorunluluğu nedir?
+OK-03 E-postasız veli telefonla mı kullanıcı adıyla mı giriş yapar?
+OK-04 Dokuz resmî alanın listesi ve ATP/AMP dışı programlar nelerdir?
+OK-05 Aynı dönemde işletme değişikliği ve History kuralı nedir?
+OK-06 'Sil' arşivleme mi, koşullu fiziksel silme mi?
+OK-07 Haftalık raporda işletme ön onayı gerekir mi?
+OK-08 Resmî puan ağırlıkları ve devamsızlık uyarı eşiği nedir?
+Bu kararları öğretmene seçenekli sorular olarak sun; cevaplanmadan geri dönüşü zor değişiklik yapma.
+
+24. TEST SENARYOLARI
+A) Okul → Alan → ATP → 12/A → Öğrenci → History.
+B) Yeni öğrenci → alan/sınıf → parola → sınıf listesi.
+C) Aynı veli telefonu → mevcut hesap → ikinci çocuk → mükerrer hesap yok.
+D) Bir öğrenciye iki veli → yalnız bağlı çocuğa erişim.
+E) Öğrenci/işletme/öğretmen/dönem staj ataması.
+F) İşletme yoklama girer; öğrencinin yoklama yazma isteği reddedilir.
+G) Taslak → gönder → düzeltme iste → yeniden gönder → onay.
+H) İşletme/öğrenci/okul değerlendirmeleri doğru rollere bağlı.
+I) Çoklu filtre → yetki korumalı güvenli CSV.
+J) Arşivli dönemde yeni yazma reddi, geçmiş okuma korunur.
+Her UC için başarılı, geçersiz veri, yetkisiz erişim, mükerrerlik, arşiv ve veri bütünlüğü testlerini uygun oldukça çalıştır. Test komutlarını ve gerçek sonuçlarını kaydet.
+
+25. ÖNCELİK
+P1: Okul/alan/program/sınıf hiyerarşisi, beş ekran, öğrenci ve veli formları, telefon tekilliği, parola üretici, sınıf tablosu ve History.
+P2: Staj ataması, yoklama, haftalık rapor, ziyaret, üç yönlü değerlendirme.
+P3: Filtreli rapor, CSV, inceleme göstergeleri, denetim, güvenlik regresyonları, mobil tasarım.
+
+26. BEKLENEN TESLİMATLAR
+A) Kod dosyası ve test kanıtlı mevcut durum analizi.
+B) Öğretmen notu → Use Case → Ekran → Kod → DB → Test izlenebilirlik matrisi.
+C) Dosya/migration/test bazında teknik geliştirme planı.
+D) Beş ekranlı arayüz akış tasarımı.
+E) Veri korumalı migration/rollback planı.
+F) Gerçek test raporu ve açık hatalar.
+G) OK-01..OK-08 öğretmen karar tablosu.
+H) Yapıldı/yapılmadı/doğrulandı/karar bekliyor ayrımlı sonuç raporu.
+
+27. SON TALİMAT
+Önce kaynakları oku; kodla karşılaştır; çelişkileri işaretle; önceliklendir; arayüz/veritabanını birlikte tasarla; güvenliği ve veriyi koru; testle; kanıtla. İLK AŞAMADA YALNIZCA kapsamlı analiz, izlenebilirlik matrisi, geliştirme planı ve açık karar listesini üret. Öğretmen kararı olmadan geri dönüşü zor DB değişikliği veya canlı müdahale yapma. Diyagramda görünen hiçbir işlevi test etmeden tamamlandı sayma.
+
+
+================== D. ARŞİV — DAHA ESKİ PROJE DOKÜMANI ==================
+UYARI: Bu bölüm tarihsel kapsam ve önceki fikirleri içerir. Yeni Use Case v3.0 ve gerçek kod ile çelişirse eski kabul edilir.
+
+12. SINIF STAJ TAKİP SİSTEMİ 2026-2027
+AYRINTILI PROJE ANA DOKÜMANI
+============================================================
+
+Belge sürümü : 1.0
+Hazırlanma   : 29 Eylül 2026
+Proje durumu : AKTİF
+Ana proje    : Staj Takip Sistemi
+Önceki proje : Akıllı Sokak Hayvanı Besleme ve Takip İstasyonu - İPTAL
+
+Bu belge, 28 Eylül 2026 tarihli iki öğretmen ses kaydı, MEB/Bilişim Teknolojileri alanı "Yazılım Projesi 11-12" ve "Web Programcılığı 11-12" kitapları ve proje kapsamında netleşen kararlar esas alınarak hazırlanmıştır.
+
+ÖNEMLİ KAYNAK ETİKETLERİ
+-------------------------
+[HOCA]   : 28.09.2026 tarihli öğretmen kayıtlarında açıkça söylenen veya doğrudan anlatılan hususlar.
+[KİTAP]  : Yazılım Projesi / Web Programcılığı ders kitaplarında bulunan yöntem, kavram veya örnekler.
+[ÖNERİ]  : Kaynakların hedefiyle uyumlu fakat öğretmenin birebir zorunlu tutmadığı, projeyi daha sağlam yapmak için önerilen teknik/tasarım kararı.
+[BELİRSİZ]: Kayıtta seslerin üst üste binmesi veya tarihlerin karışması sebebiyle kesinleştirilmemiş husus.
+
+============================================================
+1. PROJENİN TEK CÜMLELİK TANIMI
+============================================================
+
+Staj Takip Sistemi; okul yönetimi, öğretmenler, öğrenciler, veliler ve öğrencinin staj yaptığı işletmeler arasındaki staj sürecini tek bir web sistemi üzerinden yönetmeyi; öğrenci devam/devamsızlığını, işletme ve öğrenci değerlendirmelerini, stajla ilgili temel kayıtları, riskleri ve raporları düzenli biçimde takip etmeyi amaçlayan rol tabanlı bir bilgi sistemidir.
+
+[HOCA] Sistem lise seviyesine uygun, gerçek/aktif ortamda denenebilir ve modüler olacak şekilde düşünülmektedir.
+[HOCA] Şu an istenen ana çalışma TAM KODLAMA DEĞİL; gereksinim analizi, tasarım ve sunum aşamasıdır. Kodlama sonraki aşamada yapılacaktır.
+
+============================================================
+2. PROJENİN ÇÖZDÜĞÜ TEMEL PROBLEM
+============================================================
+
+Staj sürecinde farklı kişiler farklı bilgilere ihtiyaç duyar:
+- Öğrencinin staja gelip gelmediği,
+- Hangi işletmede staj yaptığı,
+- Hangi öğretmenin öğrenciyi takip ettiği,
+- İşletmenin öğrenci hakkındaki görüşleri,
+- Öğrencinin işletmeyle ilgili deneyimi,
+- Devamsızlıkların takibi,
+- Riskli işletme veya riskli staj durumlarının fark edilmesi,
+- Yönetimin okul genelinde rapor alabilmesi,
+- Öğrencinin mezuniyet sonrası çalıştığı işletme/sektör/birim gibi takip bilgileri.
+
+Bu bilgilerin kağıt, mesajlaşma, farklı Excel dosyaları veya ayrı kişilerde dağınık kalması; veri tekrarına, bilgi kaybına, güncellik sorununa ve raporlama zorluğuna neden olabilir.
+
+[ÖNERİ] Projenin problem cümlesi raporda şu şekilde kullanılabilir:
+"Staj sürecinde öğrenci, öğretmen, okul yönetimi, veli ve işletme arasında oluşan devam, performans, değerlendirme ve staj bilgilerinin dağınık yöntemlerle takip edilmesi; güncel bilgiye erişimi, denetimi ve raporlamayı zorlaştırmaktadır. Bu proje ile ilgili paydaşların yetkileri dahilinde aynı sistem üzerinden veri girişi, takip ve raporlama yapabilmesi amaçlanmaktadır."
+
+============================================================
+3. PROJENİN ANA AMAÇLARI
+============================================================
+
+3.1. [HOCA] Staj sürecini web tabanlı bir sistemde yönetmek.
+3.2. [HOCA] Farklı kullanıcı tiplerini ayrı yetkilerle sisteme dahil etmek.
+3.3. [HOCA] Devamsızlık/katılım verilerini takip etmek.
+3.4. [HOCA] Öğrenci ve işletme arasında karşılıklı değerlendirme/puanlama yapılabilmesini sağlamak.
+3.5. [HOCA] Değerlendirmelerden ve diğer verilerden anlamlı risk göstergeleri üretmek.
+3.6. [HOCA] Sistemin rapor üretebilmesini sağlamak. Öğretmen özellikle raporlamanın sistemin değerini artırdığını vurgulamıştır.
+3.7. [HOCA] Sistemi modüler tasarlamak ve ileride yeni özelliklerin eklenmesini kolaylaştırmak.
+3.8. [HOCA] Kullanıcı kayıtlarını kontrolsüz bırakmamak; rastgele "Üye Ol" sisteminden kaçınmak ve kullanıcı oluşturmayı yönetici kontrolünde tutmak.
+3.9. [ÖNERİ] İşlem geçmişi ve hata takibi ile sistemin denetlenebilirliğini artırmak.
+3.10. [ÖNERİ] Aynı verinin tekrar tekrar girilmesini azaltmak.
+
+============================================================
+4. ŞU ANKİ ÖDEV / TESLİM AŞAMASI
+============================================================
+
+[HOCA] Şu anda komple çalışan uygulamanın bitirilmesi istenmemektedir.
+[HOCA] Mevcut ana teslim: GEREKSİNİM ANALİZİ + TASARIM + SUNUM.
+
+Bu aşamada hazırlanması gereken ana parçalar:
+1. Proje problemi ve amacı
+2. Proje kapsamı ve sınırları
+3. Kullanıcı/paydaş analizi
+4. Rol ve yetkiler
+5. Ürün işlevleri / fonksiyonel gereksinimler
+6. Fonksiyonel olmayan gereksinimler
+7. Risk analizi ve risk tablosu
+8. Donanım/yazılım gereksinimleri
+9. Kullanım durumu (Use Case) mantığı
+10. Varlık-ilişki (ER) diyagramı
+11. Veri akış/iş akış şemaları
+12. Veritabanı taslak yapısı
+13. Arayüz taslakları / Figma çalışmaları
+14. Raporlama ihtiyaçları
+15. Geliştirme takvimi
+16. Grup görev dağılımı
+17. Sunum
+
+[KİTAP - Yazılım Projesi s.21-24] Tasarıma başlamadan önce gereksinim analizi yapılması gerektiği; gereksinim analizinde kullanıcı ihtiyaçlarının toplanması, uygulanabilirliğin analiz edilmesi, ürün işlevlerinin belirlenmesi, donanım/yazılım gereksinimlerinin belirlenmesi, performans ve güvenlik gereksinimlerinin belirlenmesi, gereksinimlerin belgelenmesi ve doğruluğunun kontrol edilmesi anlatılmaktadır.
+
+============================================================
+5. SÜRE VE TARİH DURUMU
+============================================================
+
+[HOCA] Gereksinim analizi/tasarım/sunum bölümü için yaklaşık 4 haftalık çalışma süresi anlatılmıştır.
+[HOCA] Gerçek son teslim tarihinden yaklaşık 1 hafta önce ekip içi bitiş tarihi koyulması istenmektedir.
+
+[BELİRSİZ] Kayıtta kesin tarih konuşulurken 26 Ekim, 28 Ekim ve 2 Kasım gibi tarihler art arda geçmektedir. Bu yüzden kesin teslim tarihi bu belgede kesin bilgi olarak yazılmamıştır.
+
+YAPILACAK: Kesin tarih öğretmenden teyit edilmelidir.
+
+[ÖNERİ] Tarih netleşene kadar planlama için:
+- T0 = öğretmenin kesin teslim tarihi
+- İç teslim = T0 - 7 gün
+- Son 7 gün = hata kontrolü + sunum + eksik tamamlama
+
+============================================================
+6. KULLANICI / PAYDAŞ ROLLERİ
+============================================================
+
+6.1. ADMIN / İDARECİ
+--------------------
+[HOCA] En geniş yetkiye sahip sistem rolüdür.
+
+[ÖNERİ] Yetkileri:
+- Kullanıcı ekleme
+- Kullanıcı düzenleme
+- Kullanıcı pasifleştirme/aktifleştirme
+- Rol atama
+- Öğrenci-öğretmen-işletme eşleştirme
+- Sistem genelinde kayıtları görüntüleme
+- Devamsızlıkları görüntüleme ve gerektiğinde düzeltme/onaylama
+- Raporları görüntüleme
+- Risk raporlarını görüntüleme
+- Excel'den toplu kullanıcı içe aktarma
+- Sistem ayarlarını yönetme
+- İşlem kayıtlarını/audit kayıtlarını görüntüleme
+
+6.2. ÖĞRENCİ
+------------
+[HOCA] Sistemin ana kullanıcılarından biridir.
+
+[ÖNERİ] Yetkileri:
+- Kendi profilini görüntüleme
+- Staj yaptığı işletmeyi görüntüleme
+- Sorumlu öğretmenini görüntüleme
+- Kendi devam/devamsızlık durumunu görüntüleme
+- İzin verilen alanlarda bilgi güncelleme
+- İşletmeyi değerlendirme
+- Kendi değerlendirme/geçmiş bilgisini görüntüleme (gizlilik kurallarına göre)
+- Duyuru/bildirimleri görüntüleme
+
+6.3. ÖĞRETMEN
+-------------
+[HOCA] Öğrencilerin staj sürecini takip eden rol.
+
+[ÖNERİ] Yetkileri:
+- Kendisine bağlı öğrencileri görüntüleme
+- Öğrencinin işletmesini görüntüleme
+- Devamsızlık/katılım verilerini takip etme
+- İşletme geri bildirimlerini görüntüleme
+- Öğrenci hakkında not/gözlem ekleme
+- Riskli durumları görüntüleme
+- Öğrenci ve işletme bazlı rapor alma
+- Gerekirse ziyaret/iletişim kaydı tutma
+
+6.4. İŞYERİ / İŞLETME
+--------------------
+[HOCA] Öğrencinin geldi/gelmedi bilgisi ve performansı gibi verileri sisteme girebilen roldür.
+[HOCA] Geri bildirim/anket benzeri değerlendirmeler yapılabilir.
+
+[ÖNERİ] Yetkileri:
+- Kendisine atanmış öğrencileri görüntüleme
+- Öğrencinin günlük/haftalık devam bilgisini işaretleme
+- Öğrencinin performans değerlendirmesini yapma
+- Açıklama/not ekleme
+- Kendi işletme profilini sınırlı şekilde görüntüleme
+- Geçmiş değerlendirmeleri görüntüleme
+
+6.5. VELİ
+---------
+[HOCA] Kullanıcı tipleri konuşulurken veli rolü sonradan eklenmiştir.
+
+[ÖNERİ] Yetkileri:
+- Sadece kendi öğrencisinin özet staj bilgilerini görüntüleme
+- Devamsızlık özetini görüntüleme
+- Genel bildirimleri görüntüleme
+- Gizlilik gereği işletme içi özel notlar ve diğer öğrencilerin verilerini görememe
+
+============================================================
+7. ÜYELİK VE KİMLİK DOĞRULAMA MODELİ
+============================================================
+
+[HOCA] Herkese açık "Üye Ol" butonu OLMAYACAK.
+[HOCA] Kullanıcılar sisteme yönetici tarafından dahil edilecek.
+[HOCA] Kullanıcı adı/şifre gibi erişim bilgileri yönetici/öğretmen tarafından belirlenebilir ve kullanıcıya iletilebilir.
+[HOCA] Excel'den toplu kullanıcı aktarımı düşünülebilir.
+[HOCA] Oluşturulan hesaplar için otomatik bilgilendirme e-postası gönderme fikri konuşulmuştur.
+
+[ÖNERİ] Güvenli uygulama:
+- Şifreler düz metin tutulmamalı.
+- PHP password_hash / password_verify kullanılmalı.
+- İlk girişte şifre değiştirme zorunluluğu eklenebilir.
+- Hesaplar active/passive durumu ile yönetilmeli.
+- Başarısız giriş denemelerine sınırlama eklenebilir.
+- Oturum süresi dolduğunda tekrar giriş istenmeli.
+
+[KİTAP - Web Programcılığı s.202-204] PHP'de session_start(), $_SESSION ve session_destroy() üzerinden oturum yönetimi anlatılmaktadır.
+
+============================================================
+8. FONKSİYONEL GEREKSİNİMLER
+============================================================
+
+FR-01 Sistem kullanıcı girişi sağlamalıdır.
+FR-02 Sistem giriş yapan kullanıcının rolünü belirlemelidir.
+FR-03 Her rol yalnız izin verilen ekranlara ulaşabilmelidir.
+FR-04 Admin kullanıcı ekleyebilmelidir.
+FR-05 Admin kullanıcı bilgilerini güncelleyebilmelidir.
+FR-06 Admin kullanıcıyı pasifleştirebilmelidir.
+FR-07 Admin rol/yetki atayabilmelidir.
+FR-08 Admin öğrenci-öğretmen eşleştirmesi yapabilmelidir.
+FR-09 Admin öğrenci-işletme eşleştirmesi yapabilmelidir.
+FR-10 Öğrenci staj bilgilerini görüntüleyebilmelidir.
+FR-11 İşletme kendisine atanmış öğrencileri görüntüleyebilmelidir.
+FR-12 İşletme öğrencinin devam/katılım bilgisini girebilmelidir.
+FR-13 Öğretmen kendisine bağlı öğrencilerin devam durumunu görüntüleyebilmelidir.
+FR-14 Öğrenci işletmeyi değerlendirebilmelidir.
+FR-15 İşletme öğrenciyi değerlendirebilmelidir.
+FR-16 Sistem değerlendirme puanlarını saklamalıdır.
+FR-17 Sistem risk göstergeleri/puanları üretebilmelidir.
+FR-18 Sistem devamsızlık raporu oluşturabilmelidir.
+FR-19 Sistem öğrenci bazlı rapor oluşturabilmelidir.
+FR-20 Sistem işletme bazlı rapor oluşturabilmelidir.
+FR-21 Sistem öğretmen bazlı rapor oluşturabilmelidir.
+FR-22 Sistem tarih aralığına göre filtreleme yapabilmelidir.
+FR-23 Sistem kayıt ekleme/silme/güncelleme/listeleme işlemlerini yetkiye göre yapabilmelidir.
+FR-24 Sistem gerekli alanlarda arama yapabilmelidir.
+FR-25 Sistem zorunlu alanların boş geçilmesini engellemelidir.
+FR-26 Sistem mükerrer kritik kayıtları engellemelidir.
+FR-27 Sistem Excel'den toplu kullanıcı içe aktarımını destekleyebilir. [HOCA önerisi]
+FR-28 Sistem hesap oluşturulduğunda bilgilendirme e-postası gönderebilir. [HOCA önerisi]
+FR-29 Sistem mezuniyet sonrası öğrencinin çalıştığı işletme/sektör/birim bilgisini tutabilmelidir. [HOCA]
+FR-30 Sistem gelecekte QR/kart vb. yeni modüller eklenebilecek şekilde tasarlanmalıdır. [HOCA modülerlik vurgusu]
+
+============================================================
+9. FONKSİYONEL OLMAYAN GEREKSİNİMLER
+============================================================
+
+NFR-01 Güvenlik: Yetkisiz kullanıcılar korumalı sayfalara erişememelidir.
+NFR-02 Güvenlik: Şifreler hash'lenmiş tutulmalıdır. [ÖNERİ]
+NFR-03 Güvenlik: SQL sorgularında prepared statement/PDO kullanılmalıdır. [ÖNERİ]
+NFR-04 Kullanılabilirlik: Arayüz açık ve lise/okul kullanıcılarının anlayabileceği biçimde olmalıdır.
+NFR-05 Performans: Normal okul kullanımında sayfalar makul sürede açılmalıdır.
+NFR-06 Veri bütünlüğü: Birincil/yabancı anahtar ve unique kuralları kullanılmalıdır.
+NFR-07 Yedekleme: Veritabanı düzenli yedeklenmelidir.
+NFR-08 Hata yönetimi: Kullanıcıya anlaşılır hata mesajı gösterilmelidir.
+NFR-09 Bakım yapılabilirlik: Modüller birbirinden mümkün olduğunca ayrılmalıdır.
+NFR-10 Genişletilebilirlik: QR, kart, yeni rapor veya yeni rol gibi modüller sonradan eklenebilmelidir.
+NFR-11 Gizlilik: Kullanıcı yalnız yetkili olduğu kişisel/staj verilerine ulaşmalıdır.
+NFR-12 Uyumluluk: Modern masaüstü ve mobil tarayıcılarda kullanılabilir olmalıdır. [ÖNERİ]
+NFR-13 Raporlanabilirlik: Kritik süreçler sorgulanabilir/veri olarak saklanmalıdır.
+NFR-14 İzlenebilirlik: Önemli yönetim işlemleri işlem kaydına yazılabilir. [ÖNERİ]
+
+[KİTAP - Yazılım Projesi s.21-22] Performans ve güvenlik gereksinimleri gereksinim analizinin parçası olarak ele alınmaktadır.
+
+============================================================
+10. PROJE KAPSAMI / SINIRLARI
+============================================================
+
+İLK ANA SÜRÜMDE OLMASI ÖNERİLENLER:
+- Rol tabanlı giriş sistemi
+- Admin kullanıcı yönetimi
+- Öğrenci yönetimi
+- Öğretmen yönetimi
+- İşletme yönetimi
+- Veli rolü için temel görüntüleme
+- Öğrenci-öğretmen-işletme atama/eşleştirme
+- Devam/devamsızlık takibi
+- Karşılıklı öğrenci/işletme değerlendirme sistemi
+- Basit risk hesaplama ve risk listesi
+- Temel raporlar
+
+İLK SÜRÜM DIŞINDA BIRAKILABİLECEKLER:
+[HOCA] QR giriş sistemi
+[HOCA] Kart basma/donanım modülü
+[ÖNERİ] Mobil uygulama
+[ÖNERİ] Gelişmiş bildirim altyapısı
+[ÖNERİ] SMS entegrasyonu
+[ÖNERİ] Yapay zeka ile otomatik risk yorumu
+[ÖNERİ] Gelişmiş analitik/grafik paneli
+
+Bu ayrım, gereksinim analizinde "ilk sürümde yok / sonraki sürüm" şeklinde belgelenebilir.
+
+============================================================
+11. MODÜLER SİSTEM MİMARİSİ
+============================================================
+
+[HOCA] Sistem modüler olmalıdır.
+
+[ÖNERİ] Ana modüller:
+M01 - Kimlik Doğrulama ve Oturum
+M02 - Kullanıcı ve Rol Yönetimi
+M03 - Öğrenci Yönetimi
+M04 - Öğretmen Yönetimi
+M05 - İşletme Yönetimi
+M06 - Veli Görüntüleme
+M07 - Staj Atama / Eşleştirme
+M08 - Devam / Devamsızlık
+M09 - Değerlendirme
+M10 - Risk Analizi
+M11 - Raporlama
+M12 - Bildirim / E-posta
+M13 - Excel İçe Aktarma
+M14 - Sistem Ayarları
+M15 - İşlem Günlüğü / Audit [ÖNERİ]
+
+Gelecek modüller:
+M16 - QR ile yoklama
+M17 - Kart/RFID ile yoklama
+M18 - Mobil uygulama/API
+
+============================================================
+12. RAPORLAMA MODÜLÜ
+============================================================
+
+[HOCA] Raporlama çok önemli görülmektedir; öğretmen, rapor sunmayan bir sistemin değerinin düşük olacağını ve sistemin ürettiği raporların sistemi kıymetli hale getirdiğini vurgulamıştır.
+
+Önerilen raporlar:
+R01 - Öğrenci devamsızlık raporu
+R02 - Tarih aralığına göre devamsızlık raporu
+R03 - İşletme bazlı öğrenci listesi
+R04 - Öğretmen bazlı sorumlu öğrenci listesi
+R05 - Sınıf/alan/dal bazlı staj dağılımı [veri varsa]
+R06 - En çok devamsızlık yapan öğrenciler
+R07 - İşletme değerlendirme puanları
+R08 - Öğrenci performans puanları
+R09 - Risk seviyesi yüksek işletmeler
+R10 - Risk seviyesi yüksek staj kayıtları
+R11 - Değerlendirmesi eksik öğrenciler
+R12 - Devam verisi eksik günler
+R13 - Aktif/pasif kullanıcı raporu
+R14 - Mezuniyet sonrası iş/sektör/birim raporu
+R15 - Aylık özet yönetim raporu
+
+[ÖNERİ] Rapor filtreleri:
+- tarih aralığı
+- öğrenci
+- öğretmen
+- işletme
+- sınıf
+- durum
+- risk seviyesi
+
+[ÖNERİ] Çıktı biçimleri ileride:
+- ekranda tablo
+- yazdırılabilir görünüm
+- PDF/Excel dışa aktarma (ilk sürüm için zorunlu değildir)
+
+============================================================
+13. KARŞILIKLI DEĞERLENDİRME VE RİSK SİSTEMİ
+============================================================
+
+[HOCA] Öğrenci ve işletmenin birbirini haftalık/aylık gibi periyotlarla değerlendirebilmesi ve bu verilerden risk değerlendirmesi üretilebilmesi fikri konuşulmuştur.
+[HOCA] İşletmenin ücreti geç ödemesi veya öğrenciyi uygun olmayan/ağır işte çalıştırması gibi örnekler risk artıran durumlar olarak verilmiştir.
+
+[ÖNERİ] İşletmenin öğrenciyi değerlendirmesi için örnek alanlar:
+- devam düzeni
+- zamanında gelme
+- verilen görevi yerine getirme
+- iş disiplini
+- iletişim
+- mesleki gelişim
+- iş sağlığı/güvenliği kurallarına uyum
+- genel açıklama
+
+[ÖNERİ] Öğrencinin işletmeyi değerlendirmesi için örnek alanlar:
+- eğitim/öğreticilik düzeyi
+- mesleğe uygun görev verilmesi
+- çalışma ortamı
+- iletişim
+- çalışma saatlerine uygunluk
+- ücret/ödeme düzeni (uygunsa)
+- güvenlik koşulları
+- genel açıklama
+
+[ÖNERİ] Risk düzeyleri:
+0-3   düşük
+4-6   orta
+7-8   yüksek
+9-10  kritik
+
+NOT: Bu eşikler öğretmenin kesin belirlediği eşikler değildir; yalnız tasarım önerisidir.
+
+============================================================
+14. RİSK YÖNETİMİ - PROJE GELİŞTİRME RİSKLERİ
+============================================================
+
+[KİTAP - Yazılım Projesi s.19-21] Risk yönetimi; risk tanımlama, risk analizi/sıralama, risk planlaması ve risk izleme/kontrol aşamalarından oluşur. Risk tablosunda riskin gerçekleşme olasılığı, projeye etkisi ve alınacak önlemler değerlendirilebilir.
+
+Önerilen proje risk tablosu:
+
+01. Risk: Veritabanının çökmesi/veri kaybı
+    Olasılık: Orta
+    Etki: Yüksek
+    Önlem: Düzenli otomatik yedek, geri yükleme testi, yedeklerin ayrı yerde tutulması.
+
+02. Risk: Sunucunun erişilemez olması
+    Olasılık: Orta
+    Etki: Yüksek
+    Önlem: Sunucu izleme, bakım planı, hata sayfası, yedekleme.
+
+03. Risk: Kullanıcının yanlış veri girmesi
+    Olasılık: Yüksek
+    Etki: Orta
+    Önlem: Form doğrulama, veri tipi kontrolü, zorunlu alan kontrolü.
+
+04. Risk: Aynı öğrencinin/kaydın birden fazla oluşturulması
+    Olasılık: Orta
+    Etki: Yüksek
+    Önlem: Unique alanlar ve mükerrer kayıt kontrolü.
+
+05. Risk: Yetkisiz kullanıcının başka role ait ekrana erişmesi
+    Olasılık: Orta
+    Etki: Yüksek
+    Önlem: Sunucu taraflı rol kontrolü; yalnız menüyü gizlemek yeterli kabul edilmemeli.
+
+06. Risk: Şifrelerin ele geçirilmesi
+    Olasılık: Orta
+    Etki: Yüksek
+    Önlem: Hash, güçlü şifre, oturum yönetimi, başarısız deneme kontrolü.
+
+07. Risk: SQL injection
+    Olasılık: Orta
+    Etki: Yüksek
+    Önlem: PDO/MySQLi prepared statement, girdi doğrulama.
+
+08. Risk: XSS / zararlı metin girdileri
+    Olasılık: Orta
+    Etki: Orta/Yüksek
+    Önlem: Çıktıda escaping, girdi kontrolü.
+
+09. Risk: Gereksinimlerin proje sırasında değişmesi
+    Olasılık: Orta
+    Etki: Orta/Yüksek
+    Önlem: Gereksinimleri yazılı belgelemek; değişiklikleri versiyonlamak.
+
+10. Risk: Ekip üyesinin görevini yapmaması
+    Olasılık: Orta
+    Etki: Yüksek
+    Önlem: Trello takibi, takım lideri kontrolü, erken bildirim, görevleri küçük parçalara bölme.
+
+11. Risk: Son güne iş kalması
+    Olasılık: Yüksek
+    Etki: Yüksek
+    Önlem: İç teslimi gerçek teslimden 1 hafta önce belirleme. [HOCA]
+
+12. Risk: GitHub/Drive dosyalarının yanlışlıkla public olması
+    Olasılık: Orta
+    Etki: Yüksek
+    Önlem: Private erişim, paylaşım listesi kontrolü. [HOCA private vurgusu]
+
+13. Risk: E-posta sisteminin çalışmaması
+    Olasılık: Orta
+    Etki: Orta
+    Önlem: SMTP/üçüncü parti servis testleri; mail başarısız olsa bile hesabın admin panelinde görülebilmesi.
+
+14. Risk: Hatalı Excel içe aktarımı
+    Olasılık: Orta
+    Etki: Yüksek
+    Önlem: Önizleme, sütun doğrulama, işlem öncesi yedek, hatalı satır raporu.
+
+15. Risk: Yanlış öğrenci-işletme eşleştirmesi
+    Olasılık: Düşük/Orta
+    Etki: Yüksek
+    Önlem: Onay ekranı, eşleştirme geçmişi, düzeltme yetkisi.
+
+16. Risk: Kullanıcının yanlış öğrencinin devam bilgisini girmesi
+    Olasılık: Orta
+    Etki: Yüksek
+    Önlem: İşletmenin yalnız kendisine atanmış öğrencileri görebilmesi.
+
+17. Risk: Raporların yanlış sonuç üretmesi
+    Olasılık: Orta
+    Etki: Yüksek
+    Önlem: Test verileriyle beklenen sonuç karşılaştırması; SQL sorgu testleri.
+
+18. Risk: Yedek var sanıldığı halde geri yüklenememesi
+    Olasılık: Düşük/Orta
+    Etki: Çok yüksek
+    Önlem: Yalnız yedek almak değil, periyodik geri yükleme testi yapmak. [ÖNERİ]
+
+============================================================
+15. VERİ DOĞRULAMA KURALLARI
+============================================================
+
+[KİTAP - Yazılım Projesi risk örnekleri] Telefon numarası alanına rakam dışı değer girilmesi ve aynı değerin birden fazla kaydedilmesi gibi durumların kontrol edilmesi örneklenmektedir.
+
+[ÖNERİ]
+- Zorunlu alanlar boş bırakılamaz.
+- E-posta geçerli formatta olmalıdır.
+- Öğrenci numarası benzersiz olmalıdır.
+- Kullanıcı adı/e-posta benzersiz olmalıdır.
+- Tarih alanları geçerli tarih olmalıdır.
+- Puan alanları belirlenmiş aralık dışında olmamalıdır.
+- Devam kaydı aynı öğrenci + aynı tarih + aynı staj kaydı için birden fazla olmamalıdır.
+- İşletme yalnız kendisine atanmış öğrenci için kayıt oluşturabilmelidir.
+- Öğretmen yalnız yetkili olduğu öğrenciler üzerinde işlem yapabilmelidir.
+- Silme işlemleri kritik veride doğrudan fiziksel silme yerine pasifleştirme/soft delete olarak tasarlanabilir.
+
+============================================================
+16. ÖNERİLEN VERİTABANI MODELİ
+============================================================
+
+Bu bölüm [ÖNERİ] niteliğindedir; ER diyagramının ayrıntılandırılması için hazırlanmıştır.
+
+16.1 users
+- id (PK)
+- username / email
+- password_hash
+- role_id (FK)
+- is_active
+- last_login_at
+- created_at
+- updated_at
+
+16.2 roles
+- id (PK)
+- name (admin, student, teacher, workplace, parent)
+
+16.3 students
+- id (PK)
+- user_id (FK, nullable/unique tasarıma göre)
+- student_no (UNIQUE)
+- first_name
+- last_name
+- class_name
+- department/field
+- branch
+- phone
+- email
+- parent_id (FK, opsiyonel)
+- graduation_status
+- created_at
+
+16.4 teachers
+- id (PK)
+- user_id (FK)
+- first_name
+- last_name
+- branch/department
+- phone
+- email
+
+16.5 workplaces
+- id (PK)
+- user_id (FK veya workplace_users ile N-N)
+- company_name
+- authorized_person
+- phone
+- email
+- address
+- sector
+- status
+
+16.6 parents
+- id (PK)
+- user_id (FK)
+- first_name
+- last_name
+- phone
+- email
+
+16.7 internships
+- id (PK)
+- student_id (FK)
+- workplace_id (FK)
+- teacher_id (FK)
+- start_date
+- end_date
+- unit/department
+- status
+- created_at
+
+16.8 attendance
+- id (PK)
+- internship_id (FK)
+- date
+- status (present/absent/excused/leave vb.)
+- check_in / check_out (ileride)
+- note
+- entered_by_user_id
+- created_at
+- UNIQUE(internship_id, date) önerilebilir.
+
+16.9 student_evaluations
+- id (PK)
+- internship_id (FK)
+- evaluator_workplace_user_id
+- period_start
+- period_end
+- attendance_score
+- punctuality_score
+- discipline_score
+- task_score
+- communication_score
+- technical_score
+- safety_score
+- general_score
+- note
+- created_at
+
+16.10 workplace_evaluations
+- id (PK)
+- internship_id (FK)
+- evaluator_student_id
+- period_start
+- period_end
+- education_score
+- task_relevance_score
+- work_environment_score
+- communication_score
+- working_hours_score
+- payment_score (uygulanıyorsa)
+- safety_score
+- general_score
+- note
+- created_at
+
+16.11 risk_records
+- id (PK)
+- internship_id/workplace_id/student_id (tasarıma göre)
+- risk_type
+- score
+- level
+- source
+- description
+- created_at
+- resolved_at
+- status
+
+16.12 notifications
+- id (PK)
+- user_id (FK)
+- title
+- message
+- type
+- is_read
+- created_at
+
+16.13 reports / report_templates [opsiyonel]
+- Raporların tamamı fiziksel tabloda tutulmak zorunda değildir; SQL sorguları ile dinamik üretilebilir.
+
+16.14 graduate_employment
+- id (PK)
+- student_id (FK)
+- workplace_name/workplace_id
+- sector
+- unit
+- start_date
+- end_date
+- note
+
+16.15 audit_logs [ÖNERİ]
+- id (PK)
+- user_id
+- action
+- entity_type
+- entity_id
+- old_value/new_value (uygun formatta)
+- ip
+- created_at
+
+============================================================
+17. ÖNERİLEN TABLO İLİŞKİLERİ
+============================================================
+
+[KİTAP - Web Programcılığı s.218] 1-1, 1-N ve N-N tablo ilişkileri anlatılmaktadır.
+
+Önerilen ilişkiler:
+- roles 1 --- N users
+- users 1 --- 0/1 students
+- users 1 --- 0/1 teachers
+- users 1 --- 0/1 parents
+- workplaces 1 --- N internships
+- students 1 --- N internships (öğrenci farklı dönemlerde farklı staj yapabilirse)
+- teachers 1 --- N internships
+- internships 1 --- N attendance
+- internships 1 --- N student_evaluations
+- internships 1 --- N workplace_evaluations
+- internships 1 --- N risk_records
+- parents 1 --- N students (tasarıma göre)
+
+[ÖNERİ] İşletmede birden fazla kullanıcı hesabı gerekiyorsa:
+- workplaces N --- N users ilişkisi için workplace_users bağlantı tablosu kullanılabilir.
+
+============================================================
+18. METİNSEL ER DİYAGRAMI TASLAĞI
+============================================================
+
+ROLES
+  1
+  |
+  N
+USERS
+  |------------------|------------------|------------------|
+  1                  1                  1                  1
+STUDENTS          TEACHERS           PARENTS          WORKPLACE_USERS*
+  |                  |                                      |
+  |1                1|                                     N|
+  |                  |                                      |
+  N                  N                                      1
+             INTERNSHIPS ------------------------------ WORKPLACES
+                  |
+                  |1
+        -----------+-------------------
+        |          |          |        |
+        N          N          N        N
+   ATTENDANCE  STUDENT_EVAL WORKPLACE_EVAL RISK_RECORDS
+
+* workplace_users yalnız bir işletmede birden fazla giriş hesabı gerekirse.
+
+============================================================
+19. USE CASE / KULLANIM DURUMU TASLAĞI
+============================================================
+
+ADMIN:
+- Giriş yap
+- Kullanıcı ekle/düzenle/pasifleştir
+- Rol ata
+- Öğrenci ekle
+- Öğretmen ekle
+- İşletme ekle
+- Öğrenci-işletme-öğretmen eşleştir
+- Rapor görüntüle
+- Risk görüntüle
+- Excel içe aktar
+
+ÖĞRENCİ:
+- Giriş yap
+- Profil/staj bilgisi görüntüle
+- Devamsızlık görüntüle
+- İşletme değerlendir
+- Bildirim görüntüle
+
+ÖĞRETMEN:
+- Giriş yap
+- Sorumlu öğrencileri görüntüle
+- Devam verilerini görüntüle
+- Değerlendirmeleri görüntüle
+- Not/gözlem ekle
+- Rapor görüntüle
+
+İŞLETME:
+- Giriş yap
+- Atanmış öğrencileri görüntüle
+- Devam kaydı gir
+- Öğrenci performansını değerlendir
+- Geçmiş kayıtları görüntüle
+
+VELİ:
+- Giriş yap
+- Kendi öğrencisinin staj özetini görüntüle
+- Devamsızlık özetini görüntüle
+- Bildirim görüntüle
+
+[KİTAP - Yazılım Projesi s.22-23 ve s.55] Kullanıcı aktörleri ve yaptıkları işlemler Use Case diyagramlarıyla gösterilebilir.
+
+============================================================
+20. VERİ AKIŞI / İŞ AKIŞI TASLAKLARI
+============================================================
+
+20.1 GİRİŞ AKIŞI
+Kullanıcı -> Giriş formu -> Kimlik doğrulama -> Başarısızsa hata -> Başarılıysa rol kontrolü -> Rol paneli
+
+20.2 DEVAM AKIŞI
+İşletme -> Öğrenci seç -> Tarih/durum gir -> Yetki ve mükerrer kayıt kontrolü -> DB kaydı -> Öğretmen/admin raporlarına yansı
+
+20.3 DEĞERLENDİRME AKIŞI
+İşletme/Öğrenci -> İlgili stajı seç -> Değerlendirme formu -> Form doğrulama -> DB -> Risk hesaplama -> Rapor
+
+20.4 KULLANICI OLUŞTURMA AKIŞI
+Admin -> Kullanıcı bilgileri -> Rol seç -> Doğrulama -> Hesap oluştur -> Gerekirse rol profil kaydı -> Bilgilendirme maili -> Aktif/Pasif durum
+
+20.5 EXCEL İÇE AKTARMA AKIŞI
+Admin -> Excel yükle -> Dosya/sütun doğrulama -> Önizleme -> Hatalı satırları işaretle -> Onay -> Toplu ekleme -> Sonuç raporu
+
+[KİTAP - Yazılım Projesi s.24 ve s.56] Veri akış diyagramlarının ve veri tabanı tasarımının tasarım aşamasında hazırlanabileceği anlatılmaktadır.
+
+============================================================
+21. ARAYÜZ / EKRAN LİSTESİ
+============================================================
+
+[ÖNERİ]
+P00 - Giriş ekranı
+P01 - Şifre değiştirme ekranı
+P10 - Admin dashboard
+P11 - Kullanıcı listesi
+P12 - Kullanıcı ekle/düzenle
+P13 - Öğrenci listesi
+P14 - Öğretmen listesi
+P15 - İşletme listesi
+P16 - Staj eşleştirme ekranı
+P17 - Excel içe aktarma ekranı
+P18 - Risk listesi
+P19 - Rapor merkezi
+P20 - Öğrenci dashboard
+P21 - Öğrenci staj bilgisi
+P22 - Öğrenci devam geçmişi
+P23 - İşletme değerlendirme formu
+P30 - Öğretmen dashboard
+P31 - Öğretmenin öğrenci listesi
+P32 - Öğrenci detay/takip ekranı
+P40 - İşletme dashboard
+P41 - Atanmış öğrenciler
+P42 - Devam girişi
+P43 - Öğrenci değerlendirme
+P50 - Veli dashboard
+P51 - Öğrenci özet/devamsızlık
+
+Figma'da önce düşük ayrıntılı wireframe, sonra kritik ekranlar için daha ayrıntılı tasarım yapılabilir.
+
+============================================================
+22. TEKNİK YAPI
+============================================================
+
+[HOCA]
+- Web tabanlı çözüm düşünülmektedir.
+- PHP ağırlıklı geliştirme önerilmiştir; mutlak zorunluluk şeklinde değil, dersle uyumlu tavsiye niteliğindedir.
+- MySQL önerilmiştir.
+- Yerel geliştirme için XAMPP önerilmiştir.
+
+[KİTAP - Web Programcılığı]
+- PHP sunucu tarafında çalışan web programlama dili olarak anlatılır.
+- PHP + MySQL + Apache birlikte kullanılmaktadır.
+- XAMPP; Apache, PHP, MySQL/phpMyAdmin ortamını yerel test için bir arada sağlayabilir.
+- PHP-MySQL bağlantısı MySQLi veya PDO ile yapılabilir (s.219-220).
+
+[ÖNERİ] Teknik stack:
+Frontend  : HTML5 + CSS3 + Bootstrap + temel JavaScript
+Backend   : PHP 8.x
+Database  : MySQL / MariaDB
+DB erişim : PDO + prepared statements
+Local     : XAMPP
+Version   : Git + GitHub private repository
+Design    : Figma
+Planning  : Trello
+Files     : Google Drive private
+
+[ÖNERİ] Basit klasör yapısı:
+/public
+  index.php
+  assets/
+/app
+  controllers/
+  models/
+  services/
+  middleware/
+  views/
+/config
+  database.php
+/storage
+  logs/
+/database
+  migrations/ veya sql/
+/docs
+
+Bu yapı zorunlu değildir; modülerliği artırmak için öneridir.
+
+============================================================
+23. VERİTABANI BAĞLANTISI VE GÜVENLİK TEKNİĞİ
+============================================================
+
+[KİTAP - Web Programcılığı s.219-220] PHP ile MySQL'e MySQLi veya PDO üzerinden bağlantı kurulabileceği anlatılır; prepared statements MySQLi özellikleri arasında sayılır.
+
+[ÖNERİ]
+- Projede PDO kullanılabilir.
+- Bağlantı bilgileri tek bir config dosyasında tutulmalı.
+- GitHub'a gerçek üretim şifreleri gönderilmemeli.
+- .env yaklaşımı veya Git'e eklenmeyen config kullanılabilir.
+- SQL sorgularında parametreli sorgu kullanılmalı.
+- Hata mesajlarında DB şifresi/bağlantı ayrıntısı kullanıcıya gösterilmemeli.
+
+============================================================
+24. BARINDIRMA / DOMAIN / ERİŞİM
+============================================================
+
+[HOCA]
+- Sistemin kendi sunucunuzda/kendi domain yapınızda barındırılması konuşulmuştur.
+- Bir domain altında subdomain kullanılabileceği anlatılmıştır.
+- Proje geliştirme aşamasında arama motorları tarafından indekslenmemesi tercih edilmiştir.
+- .htaccess / bot engelleme yaklaşımı konuşulmuştur.
+- SMTP konusunda sorun yaşanmayan hosting/servis kullanma önerisi yapılmış, Hostinger örnek olarak geçmiştir.
+
+[ÖNERİ]
+- Geliştirme subdomaini örn. staj.example.com olabilir.
+- Geliştirme ortamında erişim mümkünse kullanıcı girişiyle sınırlandırılmalıdır.
+- noindex HTTP/meta yaklaşımı ve robots.txt yalnız indekslemeyi azaltır; gerçek güvenlik mekanizması değildir.
+- Gizli veri varsa yalnız "Google görmesin" yaklaşımına güvenilmemelidir.
+
+============================================================
+25. E-POSTA MODÜLÜ
+============================================================
+
+[HOCA] Hesap oluşturma sonrası kullanıcıya otomatik bilgilendirme maili göndermek konuşulmuştur.
+
+[ÖNERİ] E-postalar:
+- hesap oluşturuldu
+- şifre sıfırlama
+- önemli sistem bildirimi
+- devamsızlık bildirimi (ileriki sürüm)
+
+Güvenlik notu:
+- E-postada düz metin kalıcı şifre göndermek yerine tek kullanımlık şifre/ilk girişte değiştirme tercih edilebilir.
+
+============================================================
+26. EXCEL'DEN TOPLU KULLANICI İÇE AKTARMA
+============================================================
+
+[HOCA] Kullanıcı bilgilerinin Excel'den toplu olarak sisteme alınması ve hesapların oluşturulması önerilmiştir.
+
+[ÖNERİ] Excel şablonu alanları:
+- role
+- student_no (öğrenci için)
+- first_name
+- last_name
+- email
+- phone
+- class
+- department
+- workplace (varsa)
+- teacher (varsa)
+
+Kurallar:
+1. Dosya yüklenir.
+2. Başlıklar kontrol edilir.
+3. Satırlar önizlenir.
+4. Hatalı satırlar gösterilir.
+5. Kullanıcı onayından sonra kayıt yapılır.
+6. Mükerrer satırlar raporlanır.
+7. İşlem sonucu kaç kaydın eklendiği/atlanıldığı gösterilir.
+
+============================================================
+27. TAKIM ÇALIŞMA DÜZENİ
+============================================================
+
+[HOCA]
+- Her grubun takım lideri olacak.
+- Takım lideri ekibi organize edecek.
+- Takım liderinin en fazla çalışan/sorumluluk alan kişilerden biri olması bekleniyor.
+- İletişim kurmayan veya çalışmayan ekip üyesi hocaya bildirilebilir.
+- Hoca gerektiğinde müdahale edebilir ve takım liderini değiştirebilir.
+- Eşit katkı önemlidir; sunumda kimin hangi aşamada çalıştığı değerlidir.
+
+Kullanılacak araçlar:
+- WhatsApp : iletişim
+- Google Drive : dosya paylaşımı, PRIVATE
+- Trello : görev atama, takip
+- GitHub : kod ve versiyon takibi, PRIVATE
+- Figma : whiteboard, akış, arayüz tasarımı, yorum
+
+[HOCA] Öğretmenin Gmail hesabı paylaşım alanlarına eklenerek ilerleme kontrol edilebilir.
+
+============================================================
+28. TRELLO İÇİN ÖNERİLEN PANO YAPISI
+============================================================
+
+[ÖNERİ] Listeler:
+1. Fikir/Havuz
+2. Yapılacak
+3. Bu Hafta
+4. Yapılıyor
+5. İncelemede
+6. Düzeltme
+7. Tamamlandı
+8. Sunum/Final
+
+Örnek kartlar:
+- Proje problem cümlesini yaz
+- Kullanıcı rollerini netleştir
+- Rol-yetki matrisi hazırla
+- Risk tablosu v1
+- Use Case diyagramı
+- ER diyagramı v1
+- Veri akış şeması
+- Admin wireframe
+- Öğrenci wireframe
+- İşletme wireframe
+- Öğretmen wireframe
+- Rapor listesi
+- Teknik gereksinimler
+- Sunum taslağı
+- Sunum provası
+
+Her kartta:
+- Sorumlu kişi
+- Son tarih
+- Açıklama
+- Kabul kriteri
+- Dosya/Figma/GitHub bağlantısı
+- Kontrol listesi
+
+============================================================
+29. GITHUB ÇALIŞMA DÜZENİ
+============================================================
+
+[HOCA] GitHub private tutulmalıdır.
+[HOCA] Demo/sürüm mantığı kullanılabilir: demo1, demo2... ardından v1, v1.1 gibi sürümleme önerilmiştir.
+
+[ÖNERİ]
+- main: kararlı sürüm
+- develop: entegrasyon
+- feature/login
+- feature/attendance
+- feature/reports
+- feature/evaluation
+
+Commit örnekleri:
+feat: add role based login
+fix: prevent duplicate attendance
+ui: add student dashboard wireframe
+report: add risk table document
+
+İlk aşamada kod yoksa GitHub repo içinde /docs klasöründe gereksinim dokümanları ve diyagram kaynakları da tutulabilir.
+
+============================================================
+30. FIGMA ÇALIŞMALARI
+============================================================
+
+[HOCA] Figma/whiteboard çalışma ve yorum amacıyla kullanılabilir.
+
+[ÖNERİ] Figma sayfaları:
+1. Project Overview
+2. User Roles
+3. Use Case
+4. User Flows
+5. ER Diagram
+6. Data Flow
+7. Wireframes
+8. Final UI
+
+Önce sistem mantığını çizmek, sonra renk/estetik üzerinde çalışmak daha verimlidir.
+
+============================================================
+31. 4 HAFTALIK GEREKSİNİM ANALİZİ / TASARIM PLANI
+============================================================
+
+Bu bölüm [ÖNERİ] olup hocanın yaklaşık 4 haftalık süre ve 1 haftalık tampon yaklaşımına göre hazırlanmıştır.
+
+1. HAFTA - Gereksinim ve risk
+- Problem tanımı
+- Amaç
+- Paydaşlar
+- Proje sınırları
+- Kullanıcı rolleri
+- Risk listesi
+- Risk tablosu v1
+- Trello görev planı
+
+2. HAFTA - Sistem modeli
+- Fonksiyonel gereksinimler
+- Fonksiyonel olmayan gereksinimler
+- Use Case
+- Rol-yetki matrisi
+- Ana iş akışları
+- Rapor ihtiyaçları
+
+3. HAFTA - Veri ve arayüz tasarımı
+- ER diyagramı
+- Tablo taslakları
+- Veri akış diyagramı
+- Figma wireframe
+- Teknik gereksinimler
+- Hosting/oturum/DB kararı
+
+4. HAFTA - Birleştirme ve sunum
+- Tüm dokümanları tek raporda toplama
+- Diyagramları kontrol
+- Eksik gereksinim kontrolü
+- Risk tablosu final
+- Sunum hazırlama
+- Prova
+- İç teslim
+
+Eğer gerçek teslimden önce ayrıca 1 hafta tampon varsa, bu hafta yalnız düzeltme ve sunum için kullanılmalıdır.
+
+============================================================
+32. KODLAMA AŞAMASI İÇİN ÖNERİLEN GELİŞTİRME SIRASI
+============================================================
+
+[HOCA] Kodlama bu aşamadan sonra gelecektir.
+
+[ÖNERİ] Kodlama başladığında:
+1. Git repo + proje iskeleti
+2. Veritabanı şeması
+3. DB bağlantı katmanı
+4. Login/logout/session
+5. Rol kontrol middleware'i
+6. Admin kullanıcı yönetimi
+7. Öğrenci/öğretmen/işletme CRUD
+8. Staj eşleştirme
+9. Devam sistemi
+10. Değerlendirme sistemi
+11. Risk hesaplama
+12. Raporlama
+13. Excel import
+14. E-posta
+15. UI iyileştirme
+16. Test
+17. Demo/dağıtım
+
+============================================================
+33. TEST PLANI
+============================================================
+
+[KİTAP] Yazılım geliştirme süreci yalnız kodlamadan oluşmaz; test aşaması önemli bir süreç adımıdır. Proje sonuç raporunda işlevlerin müşteri gereksinimlerini karşılayıp karşılamadığı test edilerek raporlanmalıdır.
+
+[ÖNERİ] Temel test senaryoları:
+T01 Doğru kullanıcı adı/şifre ile giriş.
+T02 Yanlış şifre ile giriş reddi.
+T03 Pasif kullanıcı giremez.
+T04 Öğrenci admin URL'sine doğrudan erişemez.
+T05 İşletme başka işletmenin öğrencisini göremez.
+T06 Aynı öğrenci numarası ikinci kez eklenemez.
+T07 Aynı gün için çift devam kaydı engellenir.
+T08 Zorunlu alan boşsa kayıt yapılmaz.
+T09 Geçersiz e-posta reddedilir.
+T10 Öğrenci yalnız kendi değerlendirmesini yapar.
+T11 Risk puanı beklenen girdiden doğru hesaplanır.
+T12 Devamsızlık raporu test verisiyle doğru sonuç döndürür.
+T13 Tarih filtresi doğru çalışır.
+T14 Excel'de hatalı satırlar eklenmeden raporlanır.
+T15 Oturum kapatıldığında korumalı sayfaya erişilemez.
+T16 DB bağlantı hatasında kullanıcıya gizli bilgi sızdırılmaz.
+T17 Yedek geri yükleme testi yapılır.
+
+============================================================
+34. PROJE RAPORU YAPISI
+============================================================
+
+[KİTAP - Yazılım Projesi s.47-50] Örnek proje raporunda Giriş, Araçlar ve Yöntemler, Sonuç, Sözlük ve Kaynakça bölümleri yer almaktadır; tasarım diyagramları Araçlar ve Yöntemler bölümüne dahil edilebilir.
+
+[ÖNERİ] Bu proje için ayrıntılı rapor iskeleti:
+
+KAPAK
+İÇİNDEKİLER
+
+1. GİRİŞ
+1.1 Problem tanımı
+1.2 Projenin amacı
+1.3 Hedef kullanıcılar
+1.4 Projenin kapsamı
+1.5 Projenin sınırları
+
+2. PLANLAMA
+2.1 Takım ve görev dağılımı
+2.2 Proje takvimi
+2.3 Kullanılacak araçlar
+
+3. RİSK YÖNETİMİ
+3.1 Risk yöntemi
+3.2 Risk tablosu
+3.3 Risk izleme yaklaşımı
+
+4. GEREKSİNİM ANALİZİ
+4.1 Paydaşlar
+4.2 Rol ve yetkiler
+4.3 Fonksiyonel gereksinimler
+4.4 Fonksiyonel olmayan gereksinimler
+4.5 Sistem gereksinimleri
+4.6 Güvenlik gereksinimleri
+4.7 Raporlama gereksinimleri
+
+5. TASARIM
+5.1 Use Case diyagramı
+5.2 ER diyagramı
+5.3 Veri akış diyagramları
+5.4 Veritabanı taslağı
+5.5 Arayüz tasarımları
+5.6 Teknik mimari
+
+6. GELİŞTİRME YÖNTEMİ
+6.1 PHP/MySQL/XAMPP
+6.2 Git/GitHub
+6.3 Modüler mimari
+
+7. TEST PLANI
+7.1 Test yaklaşımı
+7.2 Test senaryoları
+
+8. BEKLENEN RAPORLAR
+
+9. GELECEK SÜRÜMLER
+9.1 QR
+9.2 Kart/RFID
+9.3 Mobil uygulama
+
+10. SONUÇ
+11. SÖZLÜK
+12. KAYNAKÇA
+
+============================================================
+35. SUNUM İÇERİĞİ
+============================================================
+
+[KİTAP - Yazılım Projesi s.49] Sunumun dinleyici odaklı, ana mesajı olan, iyi planlanmış, uygun görseller kullanan ve prova edilmiş bir sunum olması önerilir.
+
+[ÖNERİ] 12-15 slaytlık akış:
+1. Proje adı + ekip
+2. Problem
+3. Amaç
+4. Kullanıcılar
+5. Rol-yetki özeti
+6. Ana özellikler
+7. Risk tablosu
+8. Use Case
+9. ER diyagramı
+10. Veri akışı
+11. Wireframe/Figma
+12. Raporlama
+13. Teknik yapı
+14. Takvim/görev dağılımı
+15. Gelecek sürüm + sonuç
+
+Sunum sırasında yalnızca ekran okumak yerine sistemin neden gerekli olduğu ve nasıl çalışacağı anlatılmalıdır.
+
+============================================================
+36. DEĞERLENDİRME / SINAVLA İLGİLİ NOT
+============================================================
+
+[HOCA] İlk yazılı sınavda gereksinim analizi kavramları, risk analizi gibi konular ve temel PHP bilgileri sorulabileceği anlatılmıştır.
+[HOCA] Dersin ezberden çok uygulama odaklı olduğu vurgulanmıştır.
+
+Çalışılması gereken kavramlar:
+- yazılım proje süreci
+- planlama
+- gereksinim analizi
+- risk yönetimi
+- fonksiyonel gereksinim
+- sistem gereksinimi
+- use case
+- ER
+- veri akış diyagramı
+- PHP temel yapısı
+- session
+- MySQL
+- DB bağlantısı
+
+============================================================
+37. HAZIR KOD / DIŞ YARDIM KONUSU
+============================================================
+
+[HOCA] Kodun %100'ünün öğrencinin sıfırdan yazdığı kod olması zorunlu değildir; internetten örnek/modül/kütüphane bulup uyarlamak mümkündür.
+[HOCA] Buna karşılık projeyi dışarıdaki tek bir kişiye bağımlı şekilde yaptırmak/yardım almak riskli görülmüştür; kişinin yarı yolda bırakması veya projenin kontrolünün öğrencilerde olmaması sorun olabilir.
+
+Doğru yaklaşım:
+- Kaynaktan öğren
+- Kodu anla
+- Uyarlayarak kullan
+- Kendi projenin yapısına entegre et
+- Ne yaptığını açıklayabilecek durumda ol
+
+============================================================
+38. VERSİYON YOL HARİTASI
+============================================================
+
+[ÖNERİ]
+Demo 0: Gereksinim + Figma + ER
+Demo 1: Login + roller
+Demo 2: Admin CRUD
+Demo 3: Staj eşleştirme + devam
+Demo 4: Değerlendirme
+Demo 5: Risk + rapor
+v1.0  : İlk tam çalışan okul sürümü
+v1.1  : Excel import + e-posta iyileştirme
+v1.2  : Gelişmiş rapor/grafikler
+v2.0  : QR/kart gibi yeni yoklama modülü
+
+============================================================
+39. PROJENİN TAMAMLANDI SAYILMASI İÇİN KABUL KRİTERLERİ
+============================================================
+
+GEREKSİNİM/TASARIM AŞAMASI İÇİN:
+[ ] Problem tanımı yazılı.
+[ ] Amaç yazılı.
+[ ] Proje kapsamı/sınırları yazılı.
+[ ] Kullanıcı rolleri yazılı.
+[ ] Rol-yetki matrisi tamam.
+[ ] Fonksiyonel gereksinimler tamam.
+[ ] Fonksiyonel olmayan gereksinimler tamam.
+[ ] Risk tablosu tamam.
+[ ] Use Case hazır.
+[ ] ER diyagramı hazır.
+[ ] Veri akış/iş akış şemaları hazır.
+[ ] Veritabanı taslağı hazır.
+[ ] Figma wireframe hazır.
+[ ] Rapor listesi hazır.
+[ ] Teknik gereksinimler yazılı.
+[ ] Trello görevleri atanmış.
+[ ] Drive private doğrulanmış.
+[ ] GitHub private doğrulanmış.
+[ ] Sunum hazır.
+[ ] Sunum provası yapılmış.
+
+KODLAMA AŞAMASI İÇİN İLERİDE:
+[ ] Login/logout çalışıyor.
+[ ] Roller sunucu tarafında korunuyor.
+[ ] Admin kullanıcı yönetimi çalışıyor.
+[ ] Öğrenci/öğretmen/işletme kayıtları çalışıyor.
+[ ] Staj eşleştirme çalışıyor.
+[ ] Devam kaydı çalışıyor.
+[ ] Değerlendirme çalışıyor.
+[ ] Risk mantığı çalışıyor.
+[ ] Temel raporlar doğru sonuç veriyor.
+[ ] Kritik testler geçiyor.
+[ ] Yedek/geri yükleme yöntemi test edilmiş.
+
+============================================================
+40. ŞU ANDA KESİN OLMAYAN / TEYİT EDİLMESİ GEREKENLER
+============================================================
+
+1. Kesin teslim tarihi.
+   [BELİRSİZ] Kaydın tarih bölümünde birden fazla tarih konuşulduğu için öğretmene sorulmalı.
+
+2. PHP'nin zorunlu olup olmadığı.
+   Kayıtta PHP güçlü şekilde öneriliyor; "başka teknoloji kesin yasak" şeklinde net bir hüküm çıkarılmamalı.
+
+3. Veli rolünün ilk sürümde ne kadar geniş olacağı.
+   Rol konuşulmuştur ancak ayrıntılı yetki listesi öğretmen tarafından tek tek belirlenmemiştir.
+
+4. Risk skorunun kesin formülü.
+   Risk fikri ve 10 üzerinden örnek konuşulmuştur; matematiksel formül öğrenci ekibi tarafından tasarlanabilir veya hocadan teyit alınabilir.
+
+5. QR/kart modülünün teslim sürümüne girip girmeyeceği.
+   İlk sürüm dışında bırakılabilir yaklaşımı uygundur.
+
+============================================================
+41. PROJE DIŞINDA BIRAKILAN ESKİ FİKİR
+============================================================
+
+Akıllı Sokak Hayvanı Besleme ve Takip İstasyonu bu projenin parçası DEĞİLDİR.
+29 Eylül 2026 itibarıyla iptal edilmiştir ve 12. sınıf ana Yazılım Projesi olarak Staj Takip Sistemi kullanılacaktır.
+
+============================================================
+42. KAYNAK ÖZETİ
+============================================================
+
+A) ÖĞRETMEN SES KAYDI 1
+28.09.2026 15.17 - yaklaşık 14 dakika 15 saniye
+Öne çıkan konular:
+- Staj Takip Sistemi fikri
+- modüler yapı
+- admin, öğrenci, öğretmen, işyeri, veli rolleri
+- admin kontrollü üyelik
+- devamsızlık
+- karşılıklı değerlendirme ve risk
+- Excel içe aktarma
+- e-posta
+- sunucu/domain/subdomain
+- dışarıdaki bir kişiye bağımlı yardımın riski
+
+B) ÖĞRETMEN SES KAYDI 2
+28.09.2026 15.41 - yaklaşık 32 dakika 09 saniye
+Öne çıkan konular:
+- raporlamanın önemi
+- risk analizi
+- gereksinim analizi
+- kullanıcı ihtiyaçları
+- ürün işlevleri
+- donanım/yazılım gereksinimleri
+- ER ve akış şemaları
+- yaklaşık 4 haftalık tasarım/gereksinim çalışması
+- takım liderliği
+- WhatsApp, Drive, Trello, GitHub, Figma
+- Drive/GitHub private
+- son tarihten 1 hafta önce iç teslim
+- PHP/MySQL/XAMPP
+- hazır kodu uyarlamanın serbest olması
+
+C) YAZILIM PROJESİ 11-12 (Bilişim Teknolojileri)
+İlgili bölümler:
+- s.17-18: planlama ve proje uygulama takvimi
+- s.19-21: risk yönetimi ve risk tablosu
+- s.21-24: gereksinim analizi ve tasarım
+- s.47-50: proje raporu ve sunumu
+- s.54-56: örnek planlama, gereksinim analizi, Use Case, ER ve veri akış diyagramı
+
+D) WEB PROGRAMCILIĞI 11-12 (Bilişim Teknolojileri)
+İlgili bölümler:
+- s.202-204: PHP oturum/session yönetimi ve giriş/çıkış örneği
+- s.218: 1-1, 1-N, N-N tablo ilişkileri
+- s.219-220: PHP ile MySQL bağlantısı, MySQLi/PDO
+- s.239-241: veritabanı kullanan giriş/oturum uygulaması örnekleri
+
+============================================================
+43. EN KISA PROJE ÖZETİ
+============================================================
+
+Bu proje, staj sürecinde okul-idare-öğretmen-öğrenci-veli-işletme arasındaki bilgi akışını düzenleyen web tabanlı bir Staj Takip Sistemi olacaktır. İlk aşamada kod yazmaktan önce sistemin gereksinimleri, kullanıcı rolleri, yetkileri, riskleri, raporları, veri yapısı, ER/use-case/veri akış diyagramları ve arayüz taslakları hazırlanacaktır. Sistem admin kontrollü kullanıcı yönetimi, devamsızlık, karşılıklı değerlendirme, risk ve güçlü raporlama özelliklerine sahip olacak; modüler tasarım sayesinde QR/kart gibi özellikler ileride eklenebilecektir. PHP + MySQL ve XAMPP dersle uyumlu önerilen teknik altyapıdır. Takım çalışması WhatsApp + private Drive + Trello + private GitHub + Figma ile izlenecek, görevlerin gerçek teslimden yaklaşık bir hafta önce bitirilmesi hedeflenecektir.
+
+============================================================
+BELGE SONU
+============================================================
